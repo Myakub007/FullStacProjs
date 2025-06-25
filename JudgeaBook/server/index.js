@@ -34,15 +34,33 @@ app.post('/signup',(req,res)=>{
                 email,
                 password:hash,
             })
-            res.send(createdUser);
             let token =jwt.sign({email},secret)
             res.cookie("token",token);
+            res.send(createdUser);
+
         })
     });
 })
 app.get('/logout',(req,res)=>{
     res.cookie("token","");
     res.redirect('/signup');
+})
+app.get('/login', (req,res)=>{
+    res.render('login')
+})
+app.post('/login', async(req,res)=>{
+    let user = await userModel.findOne({email: req.body.email})
+    if(!user) return res.alert("Email or password is incorrect!");
+    else{
+        bcrypt.compare(req.body.password,user.password,(err,result)=>{
+            if(result){
+                res.send('yes u can login');
+            }
+            else{
+                res.send('Email or password is incorrect');
+            }
+        })
+    }
 })
 
 app.listen(3000);
