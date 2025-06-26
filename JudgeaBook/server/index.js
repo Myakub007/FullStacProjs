@@ -1,4 +1,4 @@
-require('dotenv').config();
+require('dotenv').config({ path: require('find-config')('.env') });
 const secret = process.env.Some_SECRET;
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
@@ -14,6 +14,8 @@ app.set("view engine",'ejs');
 
 const path = require('path');
 const cookieParser = require('cookie-parser');
+const auth = require('./middleware/auth');
+const admin = require('./middleware/admin');
 app.use(session({
   secret: process.env.Some_SECRET,
   resave: false,
@@ -50,7 +52,7 @@ app.post('/signup',(req,res)=>{
 })
 app.get('/logout',(req,res)=>{
     res.cookie("token","");
-    res.redirect('/signup');
+    res.redirect('/login');
 })
 app.get('/login', (req,res)=>{
     res.render('login')
@@ -71,11 +73,13 @@ app.post('/login', async(req,res)=>{
         })
     }
 })
-app.get('/addbook',(req,res)=>{
+app.get('/addbook',admin,(req,res)=>{
     const message = req.session.message;
     delete req.session.message;
     res.render('addbook',{message});
 })
+
+
 app.post('/addbook', async(req,res)=>{
     let {title,author,genre,dscrptn} = req.body;
     try{let addedBook = await bookModel.create({
