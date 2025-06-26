@@ -1,6 +1,7 @@
-require('dotenv').config();
+require('dotenv').config({ path: require('find-config')('.env') })
 const mongoose = require('mongoose');
-mongoose.connect(`${process.env.MongoDB_URI}/Judgeabook`);
+const uri = process.env.MongoDB_URI;
+mongoose.connect(`${uri}/Judgeabook`);
 const userSchema = mongoose.Schema({
     username:String,
     email:String,

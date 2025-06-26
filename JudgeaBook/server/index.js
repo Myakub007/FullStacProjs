@@ -4,6 +4,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const express = require('express');
 const app = express();
+const session = require('express-session');
 
 const userModel = require('./models/user');
 const bookModel = require('./models/book')
@@ -13,6 +14,12 @@ app.set("view engine",'ejs');
 
 const path = require('path');
 const cookieParser = require('cookie-parser');
+const { MessageEvent } = require('http');
+app.use(session({
+  secret: 'yourSecretKey',
+  resave: false,
+  saveUninitialized: true
+}));
 app.use(cookieParser())
 app.use(express.json())
 app.use(express.urlencoded({extended:true}))
@@ -66,7 +73,9 @@ app.post('/login', async(req,res)=>{
     }
 })
 app.get('/addbook',(req,res)=>{
-    res.render('addbook')
+    const message = req.session.message;
+    delete req.session.message;
+    res.render('addbook',{message});
 })
 app.post('/addbook', async(req,res)=>{
     let {title,author,genre,dscrptn} = req.body;
@@ -75,7 +84,8 @@ app.post('/addbook', async(req,res)=>{
         author,
         genre,
         dscrptn
-    }) 
+    })
+    req.session.message='Book Added Successfully!';
     res.redirect('/addbook');
     
 })

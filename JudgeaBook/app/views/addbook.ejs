@@ -1,18 +1,49 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JudgeaBook-Add a Book</title>
+    
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>JudgeaBook-Add a Book</title>
+        <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+        <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 </head>
-<body>
-    <h3>Add a Book to Website</h3>
-    <form method="post">
-        <input type="text" name="title" placeholder="Book Title">
-        <input type="text" name="author" placeholder="Name of Author">
-        <input type="text" name="genre" placeholder="genre">
-        <input type="text" name="dscrptn" placeholder="Add description">
-        <input type="submit" value="Add">
-    </form>
+
+<body class="p-2 text-white bg-zinc-800">
+    <nav></nav>
+    <main>
+
+        <h3 class="font-semibold text-2xl">Add a Book to Website</h3>
+        <form class="flex flex-col items-center justify-center border-2 border-gray-700 gap-3 p-2 w-[40vw] h-[40vh]" method="post">
+            <input class="px-5 py-1 w-1/2 border border-gray-500 focus:outline-none" type="text" name="title" placeholder="Book Title">
+            <input class="px-5 py-1 w-1/2 border border-gray-500 focus:outline-none" type="text" name="author" placeholder="Name of Author">
+            <input class="px-5 py-1 w-1/2 border border-gray-500 focus:outline-none" type="text" name="genre" placeholder="genre">
+            <input class="px-5 py-1 w-1/2 border border-gray-500 focus:outline-none" type="text" name="dscrptn" placeholder="Add description">
+            <input class="px-5 py-1 bg-blue-500 w-1/8 rounded-xl" type="submit" value="Add">
+    </main>
+            
+            
+            <% if (message) { %>
+                <script>
+                Toastify({
+                    text: "<%= message %>",
+                    duration: 3000,
+                    stopOnFocus: true, // Prevents dismissing of toast on hover
+                    style: {
+                        background: "linear-gradient(to right, #00b09b, #96c93d)",
+                        width:'15vw',
+                        z:'2',
+                        position:'absolute',
+                        top:"20px",
+                        right:"20px",
+                        padding:"10px",
+                        border:"2px solid black",
+                        "border-radius":"10px"
+                    },
+                    onClick: function () { } // Callback after click
+                }).showToast();
+            </script>
+            <% } %>
 </body>
+
 </html>
