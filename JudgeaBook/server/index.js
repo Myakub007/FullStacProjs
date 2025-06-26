@@ -14,9 +14,8 @@ app.set("view engine",'ejs');
 
 const path = require('path');
 const cookieParser = require('cookie-parser');
-const { MessageEvent } = require('http');
 app.use(session({
-  secret: 'yourSecretKey',
+  secret: process.env.Some_SECRET,
   resave: false,
   saveUninitialized: true
 }));
@@ -79,13 +78,16 @@ app.get('/addbook',(req,res)=>{
 })
 app.post('/addbook', async(req,res)=>{
     let {title,author,genre,dscrptn} = req.body;
-    let addedBook = await bookModel.create({
+    try{let addedBook = await bookModel.create({
         title,
         author,
         genre,
         dscrptn
-    })
-    req.session.message='Book Added Successfully!';
+    });
+        req.session.message = 'Book Added Successfully!';
+    } catch(err){
+        req.session.message = "Book Not Created! Information too short or incomplete!";
+    }
     res.redirect('/addbook');
     
 })
