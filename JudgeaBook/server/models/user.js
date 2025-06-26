@@ -1,6 +1,6 @@
-require('dotenv').config({path:"./.env.local"});
+require('dotenv').config();
 const mongoose = require('mongoose');
-mongoose.connect(process.env.MongoDB_URI+'/Judgeabook');
+mongoose.connect(`${process.env.MongoDB_URI}/Judgeabook`);
 const userSchema = mongoose.Schema({
     username:String,
     email:String,

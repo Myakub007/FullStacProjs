@@ -1,4 +1,4 @@
-require('dotenv').config({path:"./.env.local"});
+require('dotenv').config();
 const secret = process.env.Some_SECRET;
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
@@ -6,6 +6,7 @@ const express = require('express');
 const app = express();
 
 const userModel = require('./models/user');
+const bookModel = require('./models/book')
 
 
 app.set("view engine",'ejs');
@@ -54,7 +55,9 @@ app.post('/login', async(req,res)=>{
     else{
         bcrypt.compare(req.body.password,user.password,(err,result)=>{
             if(result){
-                res.send('yes u can login');
+                let token =jwt.sign({email:user.email},secret)
+                res.cookie("token",token);
+                res.send("Logged in")
             }
             else{
                 res.send('Email or password is incorrect');
@@ -62,5 +65,18 @@ app.post('/login', async(req,res)=>{
         })
     }
 })
-
+app.get('/addbook',(req,res)=>{
+    res.render('addbook')
+})
+app.post('/addbook', async(req,res)=>{
+    let {title,author,genre,dscrptn} = req.body;
+    let addedBook = await bookModel.create({
+        title,
+        author,
+        genre,
+        dscrptn
+    }) 
+    res.redirect('/addbook');
+    
+})
 app.listen(3000);
