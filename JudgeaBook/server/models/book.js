@@ -1,5 +1,6 @@
 require('dotenv').config();
 const mongoose = require('mongoose');
+const isbnFind = require('../api/isbnFind');
 const bookSchema = mongoose.Schema({
     title:{
         type:String,
@@ -16,6 +17,9 @@ const bookSchema = mongoose.Schema({
     dscrptn:{
         type:String,
         minlength:10,
+    },
+    isbn:{
+        type:String,
     }
 })
 const book = mongoose.model('book',bookSchema);
