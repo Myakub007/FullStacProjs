@@ -45,9 +45,9 @@ app.post('/signup', (req, res) => {
                 email,
                 password: hash,
             })
-            let token = jwt.sign({ email }, secret)
+            let token = jwt.sign({ email:email,user:createdUser._id }, secret)
             res.cookie("token", token);
-            res.send(createdUser);
+            res.redirect('/profile');
 
         })
     });
@@ -67,7 +67,7 @@ app.post('/login', async (req, res) => {
             if (result) {
                 let token = jwt.sign({ email: user.email }, secret)
                 res.cookie("token", token);
-                res.send("Logged in")
+                res.redirect('/profile');
             }
             else {
                 res.send('Email or password is incorrect');
@@ -108,11 +108,31 @@ app.post('/addbook', async (req, res) => {
 app.get('/review',auth, (req, res) => {
     res.render('writeReview');
 })
-app.post('/review', async (req, res) => {
-    let { review } = req.body;
-    let yourreview = reviewModel.create({
-        review
-    })
+app.post('/review',auth, async (req, res) => {
+    let { content,like } = req.body;
+    try{
+        let user = await userModel.findOne(req.user);
+        // const book = await bookModel.findOne({isbn})
+        if(user){
+            const userid = user._id;
+            let yourreview = await reviewModel.create({
+                content,
+                // book: book._id,
+                user: userid,
+                like,
+            })
+            return res.send(`review added,${yourreview}`);
+        }
+        
+    }catch(err){
+        return res.status(401).send(`Something went wrong!${err.message}`)
+    }
+
     res.send("review posted");
+})
+app.get('/profile',auth, async (req,res)=>{
+    let user = await userModel.findOne(req.user).select('-password');
+    console.log(user)
+    res.render('profile')
 })
 app.listen(3000);
