@@ -18,6 +18,7 @@ const cookieParser = require('cookie-parser');
 const auth = require('./middleware/auth');
 const admin = require('./middleware/admin');
 const isbnFind=require('./api/isbnFind');
+const book = require('./models/book');
 app.use(session({
     secret: process.env.Some_SECRET,
     resave: false,
@@ -36,6 +37,7 @@ app.get('/', (req, res) => {
 app.get('/signup', (req, res) => {
     res.render("signup");
 })
+
 app.post('/signup', (req, res) => {
     let { username, email, password, } = req.body
     bcrypt.genSalt(10, (err, salt) => {
@@ -52,13 +54,16 @@ app.post('/signup', (req, res) => {
         })
     });
 })
+
 app.get('/logout', (req, res) => {
     res.cookie("token", "");
     res.redirect('/login');
 })
+
 app.get('/login', (req, res) => {
     res.render('login')
 })
+
 app.post('/login', async (req, res) => {
     let user = await userModel.findOne({ email: req.body.email })
     if (!user) return res.alert("Email or password is incorrect!");
@@ -75,12 +80,12 @@ app.post('/login', async (req, res) => {
         })
     }
 })
+
 app.get('/addbook', admin, (req, res) => {
     const message = req.session.message;
     delete req.session.message;
     res.render('addbook', { message });
 })
-
 
 app.post('/addbook', async (req, res) => {
     let { title, author, genre, dscrptn ,isbn } = req.body;
@@ -105,9 +110,11 @@ app.post('/addbook', async (req, res) => {
     res.redirect('/addbook');
 
 })
+
 app.get('/review',auth, (req, res) => {
     res.render('writeReview');
 })
+
 app.post('/review',auth, async (req, res) => {
     let { content,like } = req.body;
     try{
@@ -121,7 +128,10 @@ app.post('/review',auth, async (req, res) => {
                 user: userid,
                 like,
             })
-            return res.send(`review added,${yourreview}`);
+            user.reviews.push(yourreview._id);
+            await user.save();
+            return res.send(`review added`);
+
         }
         
     }catch(err){
@@ -130,9 +140,13 @@ app.post('/review',auth, async (req, res) => {
 
     res.send("review posted");
 })
+app.get('/explore',async (req,res)=>{
+    let book = await bookModel.find();
+    res.send(book);
+})
 app.get('/profile',auth, async (req,res)=>{
-    let user = await userModel.findOne(req.user).select('-password');
-    console.log(user)
-    res.render('profile')
+    let user = await userModel.findOne(req.user).select('-password').populate('reviews');
+    res.render('profile',{user});
+    
 })
 app.listen(3000);

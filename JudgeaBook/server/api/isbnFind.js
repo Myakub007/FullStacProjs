@@ -1,4 +1,5 @@
 const axios = require("axios");
+const { v4: uuidv4 } = require('uuid');
 
 async function isbnFind(title, author) {
   const queryTitle = encodeURIComponent(title);
@@ -12,7 +13,7 @@ async function isbnFind(title, author) {
     const workKey = books[0].key.split('/')[-1];
     // console.log(res.data.docs[0]);
 
-    if (books.length === 0) return null;
+    if (books.length === 0) return uuidv4();
 
     // Return the first found ISBN-13 or ISBN-10
     const isbn = books[0].isbn?.find(code => code.length === 13 || code.length === 10);
@@ -41,20 +42,20 @@ async function isbnFind(title, author) {
               if (ed.isbn_10 && ed.isbn_10.length > 0) return ed.isbn_10[0];
             }
 
-            return null;
+            return uuidv4();
           } catch (err) {
             console.error("Error fetching editions:", err.message);
-            return null;
+            return uuidv4();
           }
         }
       } catch (err) {
         console.error("Edition fetch error:", err.message);
-        return null;
+        return uuidv4();
       }
     }
   } catch (err) {
     console.error("Error fetching ISBN:", err.message);
-    return null;
+    return uuidv4();
   }
 }
 
