@@ -29,11 +29,6 @@ app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 app.set("views", path.join(__dirname, "../app/views"))
 
-app.get('/', (req, res) => {
-    // console.log(process.env.MongoDB_URI)
-    res.send('working');
-})
-
 app.get('/signup', (req, res) => {
     res.render("signup");
 })
@@ -111,26 +106,22 @@ app.post('/addbook', async (req, res) => {
 
 })
 
-app.get('/review',auth, (req, res) => {
-    res.render('writeReview');
-})
-
-app.post('/review',auth, async (req, res) => {
+app.post('/book/:isbn',auth, async (req, res) => {
     let { content,like } = req.body;
     try{
         let user = await userModel.findOne(req.user);
-        // const book = await bookModel.findOne({isbn})
+        let book = await bookModel.findOne({isbn:req.params.isbn})
+        console.log(book);
         if(user){
-            const userid = user._id;
             let yourreview = await reviewModel.create({
                 content,
-                // book: book._id,
-                user: userid,
+                book: book._id,
+                user: user._id,
                 like,
             })
             user.reviews.push(yourreview._id);
             await user.save();
-            return res.send(`review added`);
+            return res.redirect(`/book/${req.params.isbn}`)
 
         }
         
@@ -140,9 +131,16 @@ app.post('/review',auth, async (req, res) => {
 
     res.send("review posted");
 })
-app.get('/explore',async (req,res)=>{
+app.get('/',async (req,res)=>{
     let book = await bookModel.find();
-    res.send(book);
+    res.render('explore',{book})
+})
+app.get('/book/:isbn',async (req,res)=>{
+    let book = await bookModel.findOne({isbn:req.params.isbn})
+    let review = await reviewModel.find({book:book._id});
+    let user = await userModel.findOne({id:review.user}).select("username");
+    res.render('bookpage',{book,review,user});
+    // res.render('bookpage',{book});
 })
 app.get('/profile',auth, async (req,res)=>{
     let user = await userModel.findOne(req.user).select('-password').populate('reviews');

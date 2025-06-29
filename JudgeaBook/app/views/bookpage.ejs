@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+        <%= book.title %>
+    </title>
+</head>
+
+<body>
+    <div>title : <%=book.title %>
+    </div>
+    <div>author: <%= book.author%>
+    </div>
+    <div>author: <%= book.genre%>
+    </div>
+    <div>author: <%= book.dscrptn%>
+    </div>
+    <h3>Your review</h3>
+    <form method="post" class="flex items-center">
+        <textarea name="content" cols="50" rows="3"></textarea>
+        <input type="submit" value="Post">
+    </form>
+    <div class="grid grid-cols-3 gap-3">
+        <% review.reverse().forEach(function(rw){%>
+            <div
+                class="h-fit w-[25vw] flex flex-col text-white bg-zinc-800 border-2 border-gray-500 p-2 gap-2 rounded-xl shadow-lg">
+                <div class="">
+                    <span>@<%= user.username %></span>
+                </div>
+                <div class=" ">
+                    <%= rw.content %>
+                </div>
+            </div>
+            <%}) %>
+    </div>
+</body>
+
+</html>
