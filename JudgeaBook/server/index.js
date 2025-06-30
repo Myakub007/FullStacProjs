@@ -117,7 +117,6 @@ app.post('/book/:isbn',auth, async (req, res) => {
     try{
         let user = await userModel.findOne(req.user);
         let book = await bookModel.findOne({isbn:req.params.isbn})
-        console.log(book);
         if(user){
             let yourreview = await reviewModel.create({
                 content,
