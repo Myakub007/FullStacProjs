@@ -7,35 +7,56 @@
     <title>
         <%= book.title %>
     </title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 </head>
 
-<body>
-    <div>title : <%=book.title %>
-    </div>
-    <div>author: <%= book.author%>
-    </div>
-    <div>author: <%= book.genre%>
-    </div>
-    <div>author: <%= book.dscrptn%>
-    </div>
-    <h3>Your review</h3>
-    <form method="post" class="flex items-center">
-        <textarea name="content" cols="50" rows="3"></textarea>
-        <input type="submit" value="Post">
-    </form>
-    <div class="grid grid-cols-3 gap-3">
-        <% review.reverse().forEach(function(rw){%>
-            <div
-                class="h-fit w-[25vw] flex flex-col text-white bg-zinc-800 border-2 border-gray-500 p-2 gap-2 rounded-xl shadow-lg">
-                <div class="">
-                    <span>@<%= user.username %></span>
+<body class="bg-zinc-800 text-white">
+    <%- include('partials/navbar', { user: user }) %>
+        <main class="p-5">
+
+            <div class="p-2 font-semibold w-[25vw] border border-gray-700">
+                <div class="flex justify-between"><span>Title :</span><span>
+                        <%=book.title %>
+                    </span>
                 </div>
-                <div class=" ">
-                    <%= rw.content %>
+                <div class="flex justify-between"><span>Author :</span><span>
+                        <%= book.author%>
+                    </span>
+                </div>
+                <div class="flex justify-between"><span>Genre :</span><span>
+                        <%= book.genre%>
+                    </span>
+                </div>
+                <div class="flex justify-between"><span>Description :</span><span>
+                        <%= book.dscrptn%>
+                    </span>
                 </div>
             </div>
-            <%}) %>
-    </div>
+            <div class="py-5 flex flex-col justify-center gap-2 w-[30vw]">
+                <h3 class="font-bold">Your review</h3>
+                <form method="post" class="flex flex-col justify-center gap-1">
+                    <textarea class="focus:outline-none border-gray-700 border-2" name="content" cols="50"
+                        rows="3"></textarea>
+                    <input class="bg-white text-black py-1 px-3 w-fit rounded-lg" type="submit" value="Post">
+                </form>
+            </div>
+        </main>
+        <div class="bg-zinc-900 py-3">
+            <span class="px-3 text-xl font-bold" > Reviews </span>
+            <div class="py-5 px-3 grid grid-cols-4 gap-5 ">
+                <% review.reverse().forEach(function(rw){%>
+                    <div
+                        class="h-fit flex flex-col text-white bg-zinc-800 border-2 border-gray-500 p-2 rounded-xl shadow-lg">
+                        <div class="text-xs text-gray-400">
+                            <span>@<%= user.username %></span>
+                        </div>
+                        <div class="text-lg">
+                            <%= rw.content %>
+                        </div>
+                    </div>
+                    <%}) %>
+            </div>
+        </div>
 </body>
 
 </html>

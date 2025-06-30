@@ -7,6 +7,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 </head>
 <body class="bg-zinc-900 text-white ">
+    <%- include('partials/navbar', { user: user }) %>
     <h2 class="text-2xl font-semibold">Profile</h2>
     <div class="flex flex-col items-center m-auto">
         <span class="text-2xl font-thin"><%= user.username %></span>
@@ -17,7 +18,7 @@
             <div class="grid grid-cols-3 gap-3 ">
                 <% user.reviews.reverse().forEach(function(re_view){%>
                     <div class="h-fit w-[25vw] flex flex-col bg-zinc-800 border-2 border-gray-500 p-2 gap-2 rounded-xl shadow-lg">
-                        <div class="text-xs text-blue-400 flex gap-3"><span>@<%= user.username %></span><span class="text-gray-500" >book: somebook</span></div>
+                        <div class="text-xs text-blue-400 flex gap-3"><span>@<%= user.username %></span><span class="text-gray-500" >book: <%=bookname%></span></div>
                         <div class="text-md "><%= re_view.content %></div>
                         <div class="text-xs text-gray-500"><%= re_view.date%></div>
                     </div>

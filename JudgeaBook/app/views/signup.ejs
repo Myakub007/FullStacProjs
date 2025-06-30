@@ -7,15 +7,17 @@
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 </head>
 <body class="bg-zinc-800 text-white">
-    <nav></nav>
-    <main class="py-10 px-40 w-fit flex border-gray-500 border-2 flex-col items-center justify-center">
-        <h3 class="text-xl font-semibold">Sign Up on Judge a Book</h3>
-        <form method="post" class="flex flex-col gap-3 py-10 items-center">
-            <input class="focus:outline-none border border-gray-500 px-5 py-1" type="text" name="username" id="username" placeholder="username">
-            <input class="focus:outline-none border border-gray-500 px-5 py-1" type="email" name="email" id="email" placeholder="email">
-            <input class="focus:outline-none border border-gray-500 px-5 py-1" type="password" name="password" id="password" placeholder="password">
-            <input class="mt-5 border-2 border-blue-400 w-fit px-10 py-1 bg-blue-500" type="submit" value="Signup">
-        </form>
+        <%- include('partials/navbar', { user: user }) %>
+    <main>
+        <div class="py-10 px-40 shadow-lg bg-zinc-900 rounded-xl flex flex-col items-center w-fit mx-auto my-20">
+            <h3 class="text-xl font-semibold">Sign Up on Judge a Book</h3>
+            <form method="post" class="flex flex-col gap-3 py-10 items-center">
+                <input class="focus:outline-none border border-gray-500 px-5 py-1" type="text" name="username" id="username" placeholder="username">
+                <input class="focus:outline-none border border-gray-500 px-5 py-1" type="email" name="email" id="email" placeholder="email">
+                <input class="focus:outline-none border border-gray-500 px-5 py-1" type="password" name="password" id="password" placeholder="password">
+                <input class="mt-5 border-2 border-gray-400 w-fit px-10 py-1 bg-white text-black" type="submit" value="Signup">
+            </form>
+        </div>
     </main>
     <footer></footer>
 </body>

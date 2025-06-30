@@ -19,6 +19,7 @@ const auth = require('./middleware/auth');
 const admin = require('./middleware/admin');
 const isbnFind=require('./api/isbnFind');
 const book = require('./models/book');
+const check = require('./middleware/checkuser');
 app.use(session({
     secret: process.env.Some_SECRET,
     resave: false,
@@ -27,8 +28,13 @@ app.use(session({
 app.use(cookieParser())
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
+app.use(check)
 app.set("views", path.join(__dirname, "../app/views"))
 
+app.get('/',async (req,res)=>{
+    let book = await bookModel.find();
+    res.render('explore',{book})
+})
 app.get('/signup', (req, res) => {
     res.render("signup");
 })
@@ -52,7 +58,7 @@ app.post('/signup', (req, res) => {
 
 app.get('/logout', (req, res) => {
     res.cookie("token", "");
-    res.redirect('/login');
+    res.redirect('/');
 })
 
 app.get('/login', (req, res) => {
@@ -131,10 +137,6 @@ app.post('/book/:isbn',auth, async (req, res) => {
 
     res.send("review posted");
 })
-app.get('/',async (req,res)=>{
-    let book = await bookModel.find();
-    res.render('explore',{book})
-})
 app.get('/book/:isbn',async (req,res)=>{
     let book = await bookModel.findOne({isbn:req.params.isbn})
     let review = await reviewModel.find({book:book._id});
@@ -144,7 +146,13 @@ app.get('/book/:isbn',async (req,res)=>{
 })
 app.get('/profile',auth, async (req,res)=>{
     let user = await userModel.findOne(req.user).select('-password').populate('reviews');
-    res.render('profile',{user});
-    
+    let findbook = async ()=>{
+        for(const rw of user.reviews){
+            let book = await bookModel.findOne({_id:rw.book});
+            return book.title;
+        }
+    }
+    let bookname = await findbook();
+    res.render('profile',{user,bookname});
 })
 app.listen(3000);

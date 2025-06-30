@@ -1,0 +1,14 @@
+<nav class="navbar text-white px-5 flex justify-between items-center h-[8vh] bg-black">
+    <div class="text-2xl font-semibold"><span>Judgea</span><span class="text-red-500">Book</span></div>
+    <div class="flex gap-3 items-center">
+        <a href="/">Home</a>
+        <!-- <a href="/addbook">Add Book</a> -->
+        <% if (user) { %>
+            <a href="/profile">Profile</a>
+            <a class="bg-red-500 px-4 py-1 rounded-lg" href="/logout">Logout</a>
+            <% } else { %>
+                <div class="bg-white text-black px-3 py-1 rounded font-thin"><a href="/login">Login</a></div>
+                <div class="bg-white text-black px-3 py-1 rounded font-thin"><a href="/signup">Signup</a></div>
+                <% } %>
+    </div>
+</nav>
