@@ -69,7 +69,7 @@ app.get('/login', (req, res) => {
 
 app.post('/login', async (req, res) => {
     let user = await userModel.findOne({ email: req.body.email })
-    if (!user) return res.alert("Email or password is incorrect!");
+    if (!user) return res.send("Email or password is incorrect!");
     else {
         bcrypt.compare(req.body.password, user.password, (err, result) => {
             if (result) {
