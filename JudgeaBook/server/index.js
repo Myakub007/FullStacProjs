@@ -7,7 +7,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const express = require('express');
 const app = express();
-const session = require('cookie-session');
+const session = require('express-session');
 
 const userModel = require('./models/user');
 const bookModel = require('./models/book');
