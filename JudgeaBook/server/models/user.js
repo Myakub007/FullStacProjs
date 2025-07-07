@@ -1,7 +1,9 @@
 require('dotenv').config({ path: require('find-config')('.env') })
 const mongoose = require('mongoose');
 const uri = process.env.MongoDB_URI;
-mongoose.connect(`${uri}/Judgeabook`);
+mongoose.connect(`${uri}/Judgeabook`).then(() => {
+    console.log("Connected to MongoDB")}).catch((err) => {
+    console.error("Error connecting to MongoDB:", err);})
 const userSchema = mongoose.Schema({
     username:String,
     email:String,
