@@ -1,4 +1,7 @@
-require('dotenv').config({ path: require('find-config')('.env') })
+// require('dotenv').config({ path: require('find-config')('.env') })
+if (process.env.NODE_ENV !== 'production') {
+    require('dotenv').config({ path: require('find-config')('.env') });
+}
 const mongoose = require('mongoose');
 const uri = process.env.MongoDB_URI;
 mongoose.connect(`${uri}/Judgeabook`).then(() => {

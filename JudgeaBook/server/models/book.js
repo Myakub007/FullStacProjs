@@ -1,4 +1,3 @@
-require('dotenv').config();
 const mongoose = require('mongoose');
 const isbnFind = require('../api/isbnFind');
 const bookSchema = mongoose.Schema({

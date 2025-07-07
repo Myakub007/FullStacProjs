@@ -1,4 +1,7 @@
-require('dotenv').config({ path: require('find-config')('.env') });
+// require('dotenv').config({ path: require('find-config')('.env') });
+if (process.env.NODE_ENV !== 'production') {
+    require('dotenv').config({ path: require('find-config')('.env') });
+}
 const secret = process.env.Some_SECRET;
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
