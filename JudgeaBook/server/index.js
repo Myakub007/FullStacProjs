@@ -4,7 +4,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const express = require('express');
 const app = express();
-const session = require('express-session');
+const session = require('cookie-session');
 
 const userModel = require('./models/user');
 const bookModel = require('./models/book');
@@ -18,7 +18,6 @@ const cookieParser = require('cookie-parser');
 const auth = require('./middleware/auth');
 const admin = require('./middleware/admin');
 const isbnFind=require('./api/isbnFind');
-const book = require('./models/book');
 const check = require('./middleware/checkuser');
 app.use(session({
     secret: process.env.Some_SECRET,
@@ -139,8 +138,8 @@ app.post('/book/:isbn',auth, async (req, res) => {
 app.get('/book/:isbn',async (req,res)=>{
     let book = await bookModel.findOne({isbn:req.params.isbn})
     let review = await reviewModel.find({book:book._id});
-    let user = await userModel.findOne({id:review.user}).select("username");
-    res.render('bookpage',{book,review,user});
+    let username = await userModel.findOne({id:review.user}).select("username");
+    res.render('bookpage',{book,review,username});
     // res.render('bookpage',{book});
 })
 app.get('/profile',auth, async (req,res)=>{

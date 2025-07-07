@@ -11,7 +11,7 @@
 </head>
 
 <body class="bg-zinc-800 text-white">
-    <%- include('partials/navbar', { user: user }) %>
+    <%- include('partials/navbar', { user: user}) %>
         <main class="p-5">
 
             <div class="p-2 font-semibold w-[25vw] border border-gray-700">
@@ -48,7 +48,7 @@
                     <div
                         class="h-fit flex flex-col text-white bg-zinc-800 border-2 border-gray-500 p-2 rounded-xl shadow-lg">
                         <div class="text-xs text-gray-400">
-                            <span>@<%= user.username %></span>
+                            <span>@<%= username.username %></span>
                         </div>
                         <div class="text-lg">
                             <%= rw.content %>
