@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-    
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,15 +10,15 @@
 
 <body class="p-2 text-white bg-zinc-800">
     <%- include('partials/navbar', { user: user }) %>
-    <main>
+    <main class="py-10 md:px-40 px-10 w-fit shadow-lg bg-zinc-900 rounded-xl md:text-md text-sm flex flex-col items-center md:justify-center mx-auto my-20">
 
-        <h3 class="font-semibold text-2xl">Add a Book to Website</h3>
-        <form class="flex flex-col items-center justify-center border-2 border-gray-700 gap-3 p-2 w-[40vw] h-[40vh]" method="post">
-            <input class="px-5 py-1 w-1/2 border border-gray-500 focus:outline-none" type="text" name="title" placeholder="Book Title" >
-            <input class="px-5 py-1 w-1/2 border border-gray-500 focus:outline-none" type="text" name="author" placeholder="Name of Author" >
-            <input class="px-5 py-1 w-1/2 border border-gray-500 focus:outline-none" type="text" name="genre" placeholder="genre" >
-            <input class="px-5 py-1 w-1/2 border border-gray-500 focus:outline-none" type="text" name="dscrptn" placeholder="Add description" >
-            <input class="px-5 py-1 bg-blue-500 w-1/8 rounded-xl" type="submit" value="Add">
+        <h3 class="font-semibold md:text-2xl text-lg">Add a Book to Website</h3>
+        <form class="flex flex-col items-center justify-center border-2 border-gray-700 gap-3 px-2 md:w-[40vw] md:h-[40vh] py-5" method="post">
+            <input class="px-5 py-1 md:w-1/2 w-[70%] border border-gray-500 focus:outline-none" type="text" name="title" placeholder="Book Title" >
+            <input class="px-5 py-1 md:w-1/2 w-[70%] border border-gray-500 focus:outline-none" type="text" name="author" placeholder="Name of Author" >
+            <input class="px-5 py-1 md:w-1/2 w-[70%] border border-gray-500 focus:outline-none" type="text" name="genre" placeholder="genre" >
+            <input class="px-5 py-1 md:w-1/2 w-[70%] border border-gray-500 focus:outline-none" type="text" name="dscrptn" placeholder="Add description" >
+            <input class="px-5 py-1 bg-blue-500 md:w-auto w-1/2 rounded-xl" type="submit" value="Add">
     </main>
             
             

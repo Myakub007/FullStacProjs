@@ -12,18 +12,19 @@
 <body class="bg-zinc-900">
     <%- include('partials/navbar', { user: user }) %>
     <main class="p-4">
-        <div class="grid grid-cols-6 gap-3">
+        <div class="grid md:grid-cols-5 grid-cols-2 gap-3">
             <% book.reverse().forEach(function(cover){%>
-                <div
-                    class="h-[20vh] flex flex-col text-white bg-zinc-800 border-2 border-gray-500 p-4 justify-between rounded-xl shadow-lg">
-                    <div class=""><a href="/book/<%=cover.isbn%>">
+                <a href="/book/<%=cover.isbn%>"><div
+                class="h-[20vh] xl:text-lg lg:text-md md:text-md text-sm flex flex-col text-white bg-zinc-800 border-2 border-gray-500 p-4 justify-between rounded-xl shadow-lg">
+                
+                <div class="overflow-y-hidden">
                             <%= cover.title %>
-                        </a></div>
-                    <div class=" ">
+                        </div>
+                    <div class="overflow-y-hidden">
                         <div>by:</div>
                         <%= cover.author %>
                     </div>
-                </div>
+                </div></a>
                 <%}) %>
         </div>
     </main>

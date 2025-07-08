@@ -8,7 +8,7 @@
 </head>
 <body class="bg-zinc-800 text-white">
         <%- include('partials/navbar', { user: user }) %>
-    <main class="py-10 px-40 w-fit shadow-lg bg-zinc-900 rounded-xl flex flex-col items-center justify-center mx-auto my-20">
+    <main class="py-10 md:px-40 px-10 w-fit shadow-lg bg-zinc-900 rounded-xl md:text-md text-sm flex flex-col items-center md:justify-center mx-auto my-20">
         <h3 class="text-xl font-semibold">Log into your account</h3>
         <form method="post" class="flex flex-col gap-3 py-10 items-center">
             <input class="focus:outline-none border border-gray-500 px-5 py-1" type="email" name="email" id="email" placeholder="email">

@@ -8,16 +8,16 @@
 </head>
 <body class="bg-zinc-900 text-white ">
     <%- include('partials/navbar', { user: user }) %>
-    <h2 class="text-2xl font-semibold">Profile</h2>
-    <div class="flex flex-col items-center m-auto">
+    <h2 class="px-5 py-2 text-2xl font-semibold">Profile</h2>
+    <div class="flex flex-col items-center mx-auto my-2">
         <span class="text-2xl font-thin"><%= user.username %></span>
         <span class="text-sm text-gray-500"><%= user.email %></span>
 
-        <div>
+        <div class="md:m-auto my-3">
             <div>Your Reviews</div>
-            <div class="grid grid-cols-3 gap-3 ">
+            <div class="grid md:grid-cols-3 gap-3 ">
                 <% user.reviews.reverse().forEach(function(re_view){%>
-                    <div class="h-fit w-[25vw] flex flex-col bg-zinc-800 border-2 border-gray-500 p-2 gap-2 rounded-xl shadow-lg">
+                    <div class="h-fit md:w-[25vw] flex flex-col bg-zinc-800 border-2 border-gray-500 p-2 gap-2 rounded-xl shadow-lg">
                         <div class="text-xs text-blue-400 flex gap-3"><span>@<%= user.username %></span><span class="text-gray-500" >book: <%=bookname%></span></div>
                         <div class="text-md "><%= re_view.content %></div>
                         <div class="text-xs text-gray-500"><%= re_view.date%></div>

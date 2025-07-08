@@ -1,6 +1,38 @@
-<nav class="navbar text-white px-5 flex justify-between items-center h-[8vh] bg-black">
-    <div class="text-2xl font-semibold"><span>Judgea</span><span class="text-red-500">Book</span></div>
-    <div class="flex gap-3 items-center">
+<nav class="navbar text-white px-5 flex justify-between items-center md:h-[8vh] h-[5vh] bg-black">
+    <div class=" md:text-2xl font-semibold cursor-pointer"><a href="/"><span>Judgea</span><span class="text-red-500">Book</span></a></div>
+    <div id="sideOpen" class="md:hidden"><svg class="w-4 h-4 text-gray-800 dark:text-white" aria-hidden="true"
+            xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 17 14">
+            <path
+                d="M16 2H1a1 1 0 0 1 0-2h15a1 1 0 1 1 0 2Zm0 6H1a1 1 0 0 1 0-2h15a1 1 0 1 1 0 2Zm0 6H1a1 1 0 0 1 0-2h15a1 1 0 0 1 0 2Z">
+            </path>
+        </svg></div>
+    <div id="sidebar" class="hidden w-[100vw] h-[100vh] top-0 right-0 z-10 absolute">
+        <div class="md:hidden w-[30vw] h-[100vh] bg-zinc-800 opacity-50"></div>
+        <div
+            class="md:hidden flex flex-col top-0 right-0 absolute gap-4 p-4 items-start bg-black text-white w-[70vw] h-[100vh]">
+            <div class="flex items-center justify-between w-full">
+                <div class="text-lg font-semibold">Menu</div>
+                <div id="sideClose"><svg class="w-4 h-4 text-gray-800 dark:text-white" aria-hidden="true"
+                        xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 8 14">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="m1 13 5.7-5.326a.909.909 0 0 0 0-1.348L1 1"></path>
+                    </svg></div>
+            </div>
+            <a href="/">Home</a>
+            <!-- <a href="/addbook">Add Book</a> -->
+            <% if (user) { %>
+                <a href="/profile">Profile</a>
+                <a class="bg-red-500 px-4 py-1 rounded-lg" href="/logout">Logout</a>
+                <% } else { %>
+                    <div class="bg-white w-1/2 text-black md:px-3 text-center py-1 rounded font-thin"><a
+                            href="/login">Login</a></div>
+                    <div class="bg-white w-1/2 text-black md:px-3 text-center py-1 rounded font-thin"><a
+                            href="/signup">Signup</a></div>
+                    <% } %>
+        </div>
+    </div>
+
+    <div class="md:flex md:gap-3 md:items-center hidden">
         <a href="/">Home</a>
         <!-- <a href="/addbook">Add Book</a> -->
         <% if (user) { %>
@@ -12,3 +44,12 @@
                 <% } %>
     </div>
 </nav>
+<script>
+    document.getElementById("sideOpen").addEventListener("click", () => {
+        document.getElementById("sidebar").classList.remove("hidden");
+        document.getElementById("sidebar").classList.add("flex");
+    });
+    document.getElementById("sideClose").addEventListener("click", () => {
+        document.getElementById("sidebar").classList.add("hidden");
+    });
+</script>

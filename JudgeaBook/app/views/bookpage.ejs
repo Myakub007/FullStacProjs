@@ -14,25 +14,25 @@
     <%- include('partials/navbar', { user: user}) %>
         <main class="p-5">
 
-            <div class="p-2 font-semibold w-[25vw] border border-gray-700">
-                <div class="flex justify-between"><span>Title :</span><span>
+            <div class="p-2 md:text-sm text-xs md:w-[40vw] w-[90vw] border border-gray-700 ">
+                <div class="flex flex-col m-1 flex-wrap"><span class="font-semibold">Title :</span><span>
                         <%=book.title %>
                     </span>
                 </div>
-                <div class="flex justify-between"><span>Author :</span><span>
+                <div class="flex flex-col m-1 flex-wrap"><span class="font-semibold">Author :</span><span>
                         <%= book.author%>
                     </span>
                 </div>
-                <div class="flex justify-between"><span>Genre :</span><span>
+                <div class="flex flex-col m-1 flex-wrap"><span class="font-semibold">Genre :</span><span>
                         <%= book.genre%>
                     </span>
                 </div>
-                <div class="flex justify-between"><span>Description :</span><span>
+                <div class="flex flex-col m-1 flex-wrap"><span class="font-semibold">Description :</span><span>
                         <%= book.dscrptn%>
                     </span>
                 </div>
             </div>
-            <div class="py-5 flex flex-col justify-center gap-2 w-[30vw]">
+            <div class="py-5 flex flex-col justify-center gap-2 md:w-[50vw] w-[80vw]">
                 <h3 class="font-bold">Your review</h3>
                 <form method="post" class="flex flex-col justify-center gap-1">
                     <textarea class="focus:outline-none border-gray-700 border-2" name="content" cols="50"
@@ -43,7 +43,7 @@
         </main>
         <div class="bg-zinc-900 py-3">
             <span class="px-3 text-xl font-bold" > Reviews </span>
-            <div class="py-5 px-3 grid grid-cols-4 gap-5 ">
+            <div class="py-5 px-3 grid md:grid-cols-4 gap-5 ">
                 <% review.reverse().forEach(function(rw){%>
                     <div
                         class="h-fit flex flex-col text-white bg-zinc-800 border-2 border-gray-500 p-2 rounded-xl shadow-lg">

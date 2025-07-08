@@ -10,9 +10,7 @@ if (process.env.NODE_ENV !== 'production') {
         console.error("Error connecting to MongoDB:", err);})
 }
 else {
-    mongoose.connect(`${uri}`, { useNewUrlParser: true, useUnifiedTopology: true })
-        .then(() => console.log("Connected to MongoDB"))
-        .catch(err => console.error("Error connecting to MongoDB:", err));}
+    mongoose.connect(`${uri}`, { useNewUrlParser: true, useUnifiedTopology: true })}
 const userSchema = mongoose.Schema({
     username:String,
     email:String,
