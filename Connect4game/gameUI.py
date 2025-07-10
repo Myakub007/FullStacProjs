@@ -1,4 +1,6 @@
 import pygame
+import os
+import sys
 pygame.init()
 
 
@@ -21,38 +23,50 @@ pygame.display.set_caption("Game UI Example")
 running = True
 grid = [[0 for _ in range(cols)] for _ in range(rows)]
 players = [
-    {"id":1,"name": "Player 1", "color": (255, 0, 0)},
-    {"id":2,"name": "Player 2", "color": (0, 0, 255)},
-    {"id":3,"name": "Player 3", "color": (0, 255, 0)},
-    {"id":4,"name": "Player 4", "color": (255, 255, 0)}
+    {"id":1,"name": "Player 1", "color": (224, 0, 0)},
+    {"id":2,"name": "Player 2", "color": (0, 0, 224)},
+    {"id":3,"name": "Player 3", "color": (0, 224, 0)},
+    {"id":4,"name": "Player 4", "color": (224, 224, 0)}
 ]
 
+def update():
+    pygame.display.flip()  # Update the display
 
 def main_menu():
     menu_running = True
     selected_players = 0  # Variable to track selected players
     
-    font = pygame.font.Font(None, 36)  # Font for menu text
-    title_text = font.render("Connect Four", True, (255, 255, 255))
+    title_font = pygame.font.Font(os.path.join('./assets/fonts/PixelifySans-VariableFont_wght.ttf'), 36)  # Font for menu text
+    font = pygame.font.Font(os.path.join('./assets/fonts/PixelifySans-VariableFont_wght.ttf'), 24)  # Font for menu buttons
+    title_text = title_font.render("Connect Four", True, (224, 224, 224))
 
     button_data = []
     for i in range(2, 5):
-        text = font.render(f"{i} Players", True, (255, 255, 255))
+        text = font.render(f"{i} Players", True, (224, 224, 224))
         button_rect = text.get_rect(center=(width // 2, height // 2 + (i - 2) * 50 ))
         button_data.append((text, button_rect))
 
     while menu_running:
-        screen.fill((0, 0, 0))  # Fill the screen with black color
+        screen.fill(('pink'))  # Fill the screen with black color
         screen.blit(title_text, (width // 2 - title_text.get_width() // 2, height // 4))
 
         for i,(text, rect) in enumerate(button_data):
-            pygame.draw.rect(screen, (0, 0, 255), rect)
-            screen.blit(text, ((rect.x + (rect.width - text.get_width())//2 ), rect.y + (rect.height - text.get_height()) // 2))
+            pygame.draw.rect(screen, (0, 0, 224), (rect.x -20 ,rect.y-5, text.get_width()+40,text.get_height()+10 ), border_radius=10)  # Draw button background
+            screen.blit(text, ((rect.x + (rect.width - text.get_width())//2 ), rect.y + (rect.height - text.get_height()) // 2))  # Draw button text
 
-        pygame.display.flip()  # Update the display
+        # Draw buttons
+        exit_text = font.render("Exit", True, (224, 224, 224))
+        exit_rect = exit_text.get_rect(center=(width // 2, height // 2 + 150))
+        pygame.draw.rect(screen,(200,0,0), (exit_rect.x -20 ,exit_rect.y-5, exit_text.get_width()+40,exit_text.get_height()+10 ), border_radius=10)  # Draw exit button background
+        screen.blit(exit_text, (exit_rect.x + (exit_rect.width - exit_text.get_width()) // 2, exit_rect.y + (exit_rect.height - exit_text.get_height()) // 2))  # Draw exit button text
+
+        update() # Update the display
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 menu_running = False
+                pygame.quit()
+                sys.exit()
 
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:
@@ -61,32 +75,47 @@ def main_menu():
                             selected_players = i+2
                             print(f"Selected {selected_players} players")
                             menu_running = False
+
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 1:
+                    if exit_rect.collidepoint(event.pos):
+                        menu_running=False
+                        pygame.quit()
+                        sys.exit()
     return selected_players  # Return the number of players selected
 
 
 
 def draw_board():
-    screen.fill('blue')  # Fill the screen with black color
+    screen.fill('pink')  # Fill the screen with black color
+    board_bg_color = ('red')
+    pygame.draw.circle(screen,board_bg_color,(offset_x+(2*square_size),offset_y-25),70)
+    pygame.draw.circle(screen,board_bg_color,(offset_x+(8*square_size),offset_y-25),70)
+    pygame.draw.circle(screen,('white'),(offset_x+(2*square_size),offset_y-25),55)
+    pygame.draw.circle(screen,('white'),(offset_x+(8*square_size),offset_y-25),55)
+    pygame.draw.circle(screen,('black'),(offset_x+(2*square_size),offset_y-25),30)
+    pygame.draw.circle(screen,('black'),(offset_x+(8*square_size),offset_y-25),30)
+    boardframe = pygame.Rect(offset_x -25,offset_y-25,(cols*square_size)+50,(rows*square_size)+50)
+    pygame.draw.rect(screen,board_bg_color,boardframe,0,15)
 
     for c in range(cols):
         for r in range(rows):
 
                 # Draw a coin in the corner squares
+            board_color = (64,224,208) # Cyan color for the board squares
             rect = pygame.Rect(c * square_size + offset_x, r * square_size + offset_y, square_size, square_size)
             circle_center = (rect.centerx, rect.centery)
 
             if (c == 0 and r == 0):
-                pygame.draw.rect(screen, (0, 255, 255), rect,0,border_top_left_radius=25)  # Rounded corners
+                pygame.draw.rect(screen, board_color,rect,0,border_top_left_radius=25)  # Rounded corners
             elif (c == cols-1 and r == 0):
-                pygame.draw.rect(screen, (0, 255, 255), rect,0,border_top_right_radius=25)  # Rounded corners
+                pygame.draw.rect(screen, board_color, rect,0,border_top_right_radius=25)  # Rounded corners
             elif (c == 0 and r == rows-1):
-                pygame.draw.rect(screen, (0, 255, 255), rect,0,border_bottom_left_radius=25)  # Rounded corners
+                pygame.draw.rect(screen, board_color, rect,0,border_bottom_left_radius=25)  # Rounded corners
             elif (c == cols-1 and r == rows-1):
-                pygame.draw.rect(screen, (0, 255, 255), rect,0,border_bottom_right_radius=25)  # Rounded corners
+                pygame.draw.rect(screen, board_color, rect,0,border_bottom_right_radius=25)  # Rounded corners
             else:
-                pygame.draw.rect(screen, (0, 255, 255), rect)
-
-
+                pygame.draw.rect(screen, board_color, rect)
             # Draw a circle in the center of the square
             # if grid[r][c] == player_id:
             #     pygame.draw.circle(screen, player_color, circle_center, coin_size)
@@ -96,7 +125,7 @@ def draw_board():
             if cell_value == 0:
                 pygame.draw.circle(screen, (0, 0, 0), circle_center, coin_size)
             else:
-                color = next((p["color"] for p in playerlist if p["id"] == cell_value), (255, 255, 255))
+                color = next((p["color"] for p in playerlist if p["id"] == cell_value), (224, 224, 224))
                 pygame.draw.circle(screen, color, circle_center, coin_size)
 
 
@@ -116,7 +145,7 @@ def find_coin_location(col,player):
             draw_board()
             center = (offset_x + col * square_size + square_size // 2, offset_y + r * square_size + square_size // 2)
             pygame.draw.circle(screen, player_color, center, coin_size)
-            pygame.display.update()
+            update()
             pygame.time.wait(50)  # Wait for 50ms
         else:
             grid[r][col] = player
@@ -147,8 +176,7 @@ def winning_condition(player):
 
 
 no_players = main_menu() 
-screen.fill((0, 0, 0))
-pygame.display.update()
+update()
 pygame.time.wait(200)
 playerlist = players[:no_players]
 current_player_index = 0  # Get the selected number of players
@@ -184,17 +212,25 @@ while running:
                     if winning_condition(player_id):
                         print(f"{player_name} win!")
                         running = False
-                    current_player_index = (current_player_index + 1) % no_players
+
+                    if all(grid[r][c] != 0 for r in range(rows) for c in range(cols)):
+                        print("It's a draw!")
+                        running = False
+                    if no_players>1:
+                        current_player_index = (current_player_index + 1) % no_players
+                    else:
+                        current_player_index = 0
 
 
 
     draw_board()  # Draw the game board
     # Draw a simple rectangle as a placeholder for game UI
     #pyame.draw.rect(screen,color, rect)
-    # pygame.draw.rect(screen, (255, 0, 0), (100, 100, 200, 100))
+    # pygame.draw.rect(screen, (224, 0, 0), (100, 100, 200, 100))
     #draw a circle use pygame.draw.circle(screen, color, center, radius)
-    # pygame.draw.circle(screen, (0, 255, 0), (400, 300), 50)  # Draw a circle
+    # pygame.draw.circle(screen, (0, 224, 0), (400, 300), 50)  # Draw a circle
 
-    pygame.display.flip()  # Update the display
+    update()  # Update the display
 
 pygame.quit()
+sys.exit()
