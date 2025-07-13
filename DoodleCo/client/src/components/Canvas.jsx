@@ -22,7 +22,7 @@ const Canvas = () => {
             (e) => {
                 const rect = canvasRef.current.getBoundingClientRect();
                 curMousePos.current.x = e.x - rect.left
-                curMousePos.current.t = e.y - rect.top
+                curMousePos.current.y = e.y - rect.top
             })
         canvas.addEventListener('mousedown', (e) => {
             if (e.buttons === 1) {
@@ -32,7 +32,7 @@ const Canvas = () => {
                     c.beginPath()
                     c.moveTo(x,y)
                     // c.moveTo(mouseX,mouseY)
-                    c.lineTo(1000, 1000)
+                    c.lineTo(100, 100)
                     c.stroke()
                 }
                 animate();
