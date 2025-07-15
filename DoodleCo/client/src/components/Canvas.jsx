@@ -13,11 +13,11 @@ const Canvas = () => {
     // const [varColor,setVarColor] = useState('#000'); not working
     const curTool = useRef('brush');
 
+
     const handleColorChage = (e) => {
         color.current = e.target.id
         // setVarColor(e.target.id)
     }
-
     // after calling request animation frame we need to cancel the canimation to stop it from drawing.
     useEffect(() => {
 
@@ -163,12 +163,19 @@ const Canvas = () => {
             animating.current = requestAnimationFrame(animate);
         };
 
+        const handleMouseMove = (e) => {
+            const rect = canvasRef.current.getBoundingClientRect();
+            curMousePos.current.x = e.x - rect.left;
+            curMousePos.current.y = e.y - rect.top;
+        }
+
         canvas.addEventListener('mousemove',
             (e) => {
 
-                const rect = canvasRef.current.getBoundingClientRect();
-                curMousePos.current.x = e.x - rect.left;
-                curMousePos.current.y = e.y - rect.top;
+                handleMouseMove(e)
+                // const rect = canvasRef.current.getBoundingClientRect();
+                // curMousePos.current.x = e.x - rect.left;
+                // curMousePos.current.y = e.y - rect.top;
                 // if (isDrag.current) {
                 //     function animate() {
                 //         const {x,y} = curMousePos.current
@@ -185,6 +192,14 @@ const Canvas = () => {
 
                 // }
             })
+        const handleMouseDown = (e) => {
+            if (curTool.current === 'brush') {
+                draw(e);
+            }
+            else if (curTool.current === 'bucket') {
+                flood_fill(e.x, e.y)
+            }
+        }
         canvas.addEventListener('mousedown', (e) => {
             // isDrag.current = true
             // const rect = canvas.getBoundingClientRect();
@@ -193,25 +208,45 @@ const Canvas = () => {
             // lastpos.current.x = x
             // lastpos.current.y = y
             // animating.current = requestAnimationFrame(animate)
-            if (curTool.current === 'brush') {
-                draw(e);
-            }
-            else if (curTool.current === 'bucket') {
-                flood_fill(e.x, e.y)
-            }
+            //     if (curTool.current === 'brush') {
+            //         draw(e);
+            //     }
+            //     else if (curTool.current === 'bucket') {
+            //         flood_fill(e.x, e.y)
+            //     }
+            handleMouseDown(e)
         })
-        canvas.addEventListener('mouseup', () => {
+        const handleMouseUp = () => {
             lastpos.current.x = 0
             lastpos.current.y = 0
             isDrag.current = false
             cancelAnimationFrame(animating.current)
-        })
-        canvas.addEventListener('mouseleave', () => {
+        }
+        canvas.addEventListener('mouseup', 
+            //     () => {
+            //     lastpos.current.x = 0
+            //     lastpos.current.y = 0
+            //     isDrag.current = false
+            //     cancelAnimationFrame(animating.current)
+            // }
+            handleMouseUp
+        )
+
+        const handleMouseLeave = () => {
             lastpos.current.x = 0
             lastpos.current.y = 0
             isDrag.current = false
             cancelAnimationFrame(animating.current)
-        })
+        }
+        canvas.addEventListener('mouseleave',
+            //     () => {
+            //     lastpos.current.x = 0
+            //     lastpos.current.y = 0
+            //     isDrag.current = false
+            //     cancelAnimationFrame(animating.current)
+            // }
+            handleMouseLeave
+        )
     }, [isDrag])
 
     return (
