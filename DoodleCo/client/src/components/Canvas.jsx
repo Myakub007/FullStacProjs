@@ -259,6 +259,12 @@ const Canvas = () => {
             // }
             handleMouseLeave
         )
+        return()=>{
+            removeEventListener('mousedown',handleMouseDown)
+            removeEventListener('mouseup',handleMouseUp)
+            removeEventListener('mouseleave',handleMouseLeave)
+            removeEventListener('mousemove',handleMouseMove)
+        }
     }, [isDrag])
 
     return (
