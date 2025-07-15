@@ -14,6 +14,36 @@ const Canvas = () => {
     const curTool = useRef('brush');
 
 
+    const maxStates = 20;
+    //storing states
+    const canvasStates = useRef([]);
+
+    const saveCanvasState = () => {
+        const canvas = canvasRef.current
+        const ctx = canvasRef.current.getContext('2d');
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+        if (canvasStates.current.length > maxStates) {
+            canvasStates.current.shift(); // remove oldest
+        }
+        canvasStates.current.push(imageData);
+        // console.log(canvasStates.current);
+    };
+
+
+    const undo = () => {
+        if (canvasStates.current.length > 1) {
+            canvasStates.current.pop();
+            const previousState = canvasStates.current[canvasStates.current.length - 1]
+
+            const canvas = canvasRef.current
+            const ctx = canvas.getContext('2d');
+
+            ctx.putImageData(previousState, 0, 0);
+            // console.log("✅ Restored from ImageData");
+        }
+    }
+
     const handleColorChage = (e) => {
         color.current = e.target.id
         // setVarColor(e.target.id)
@@ -23,10 +53,14 @@ const Canvas = () => {
         lastpos.current.y = 0
         isDrag.current = false
         cancelAnimationFrame(animating.current)
+        saveCanvasState();
     }
     const handleMouseLeave = () => {
         lastpos.current.x = 0
         lastpos.current.y = 0
+        if (isDrag.current) {
+            saveCanvasState();
+        }
         isDrag.current = false
         cancelAnimationFrame(animating.current)
     }
@@ -184,88 +218,34 @@ const Canvas = () => {
         canvas.height = window.innerHeight / 2;
         c.fillStyle = '#FFFFFF';
         c.fillRect(0, 0, canvas.width, canvas.height);
-        // c.fillStyle = 'blue'
-        // c.fillRect(100, 100, 5, 5);
-        // c.fill()
-        // c.fillRect(110, 110, 10, 10);
-        // c.fill()
-        // c.fillRect(120, 120, 15, 15);
-        // c.fill()
-        // c.fillRect(130, 130, 20, 20);
-        // c.fill()
-
-
-
-
+        canvasStates.current = [];
+        saveCanvasState();
 
         canvas.addEventListener('mousemove',
             (e) => {
 
                 handleMouseMove(e)
-                // const rect = canvasRef.current.getBoundingClientRect();
-                // curMousePos.current.x = e.x - rect.left;
-                // curMousePos.current.y = e.y - rect.top;
-                // if (isDrag.current) {
-                //     function animate() {
-                //         const {x,y} = curMousePos.current
-
-                //         c.beginPath()
-                //         c.moveTo(lastpos.x,lastpos.y)
-                //         // c.moveTo(mouseX,mouseY)
-                //         c.lineTo(x,y)
-                //         lastpos.x = x 
-                //         lastpos.y = y
-                //         c.stroke()
-                //     }
-                //     animating.current = requestAnimationFrame(animate)
-
-                // }
             })
 
         canvas.addEventListener('mousedown', (e) => {
-            // isDrag.current = true
-            // const rect = canvas.getBoundingClientRect();
-            // let x = e.x - rect.left;
-            // let y = e.y - rect.top;
-            // lastpos.current.x = x
-            // lastpos.current.y = y
-            // animating.current = requestAnimationFrame(animate)
-            //     if (curTool.current === 'brush') {
-            //         draw(e);
-            //     }
-            //     else if (curTool.current === 'bucket') {
-            //         flood_fill(e.x, e.y)
-            //     }
             handleMouseDown(e)
         })
 
         canvas.addEventListener('mouseup',
-            //     () => {
-            //     lastpos.current.x = 0
-            //     lastpos.current.y = 0
-            //     isDrag.current = false
-            //     cancelAnimationFrame(animating.current)
-            // }
             handleMouseUp
         )
 
 
         canvas.addEventListener('mouseleave',
-            //     () => {
-            //     lastpos.current.x = 0
-            //     lastpos.current.y = 0
-            //     isDrag.current = false
-            //     cancelAnimationFrame(animating.current)
-            // }
             handleMouseLeave
         )
-        return()=>{
-            removeEventListener('mousedown',handleMouseDown)
-            removeEventListener('mouseup',handleMouseUp)
-            removeEventListener('mouseleave',handleMouseLeave)
-            removeEventListener('mousemove',handleMouseMove)
+        return () => {
+            removeEventListener('mousedown', handleMouseDown)
+            removeEventListener('mouseup', handleMouseUp)
+            removeEventListener('mouseleave', handleMouseLeave)
+            removeEventListener('mousemove', handleMouseMove)
         }
-    }, [isDrag])
+    }, [])
 
     return (
         <>
@@ -309,6 +289,9 @@ const Canvas = () => {
                         <div className='flex items-center justify-center'>
                             <button onClick={() => { curTool.current = 'bucket'; }}><img src="/images/paint-bucket-black.png" alt="ibucket" /></button>
                         </div>
+                    </div>
+                    <div>
+                        <button onClick={undo}><img src="/images/undo-black.png" alt="undo" /></button>
                     </div>
                     <div id='colorSelect' className='border border-gray-500'>
                         <div className='flex'>
