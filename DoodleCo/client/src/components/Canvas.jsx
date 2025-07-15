@@ -9,14 +9,13 @@ const Canvas = () => {
     const animating = useRef(null);
     const lastpos = useRef({ x: 0, y: 0 })
     const lineWidth = useRef(3);
-    const color = useRef('black');
+    const color = useRef('#000000');
+    // const [varColor,setVarColor] = useState('#000'); not working
     const curTool = useRef('brush');
-
 
     const handleColorChage = (e) => {
         color.current = e.target.id
-        console.log(e)
-        console.log('color changed')
+        // setVarColor(e.target.id)
     }
 
     // after calling request animation frame we need to cancel the canimation to stop it from drawing.
@@ -26,6 +25,8 @@ const Canvas = () => {
         canvas.width = window.innerWidth / 2;
         canvas.height = window.innerHeight / 2;
         const c = canvas.getContext('2d');
+        c.fillStyle = '#FFFFFF';
+        c.fillRect(0, 0, canvas.width, canvas.height);
         // c.fillStyle = 'blue'
         // c.fillRect(100, 100, 5, 5);
         // c.fill()
@@ -36,7 +37,7 @@ const Canvas = () => {
         // c.fillRect(130, 130, 20, 20);
         // c.fill()
 
-        const draw = (e)=>{
+        const draw = (e) => {
             isDrag.current = true
             const rect = canvas.getBoundingClientRect();
             let x = e.x - rect.left;
@@ -44,6 +45,98 @@ const Canvas = () => {
             lastpos.current.x = x
             lastpos.current.y = y
             animating.current = requestAnimationFrame(animate)
+        }
+
+        const flood_fill = (startX, startY) => {
+            //correcting mouse position
+            const rect = canvas.getBoundingClientRect();
+            const x = Math.floor(startX - rect.left);
+            const y = Math.floor(startY - rect.top);
+
+            // canvas pixel data
+            const imageData = c.getImageData(0, 0, canvas.width, canvas.height)
+            const data = imageData.data;
+
+            //convert color from hex to RGBA
+            const fillColor = hexToRgba(color.current);
+
+            //get target color 
+            const targetPos = (y * canvas.width + x) * 4;
+            const targetColor = {
+                r: data[targetPos],
+                g: data[targetPos + 1],
+                b: data[targetPos + 2],
+                a: data[targetPos + 3]
+            };
+
+            // if target color matches fill color do nothing
+            if (colorsMatch(targetColor, fillColor)) return;
+
+            //BFS implementation
+            const queue = [{ x: x, y: y }];
+            const width = canvas.width
+            const height = canvas.height
+
+            while (queue.length) {
+                const { x, y } = queue.shift();
+                const pos = (y * width + x) * 4;
+
+                //if pixel within bounds and matches target color
+                if (
+                    x < 0 || x >= width ||
+                    y < 0 || y >= height ||
+                    !colorsMatch(
+                        {
+                            r: data[pos],
+                            g: data[pos + 1],
+                            b: data[pos + 2],
+                            a: data[pos + 3],
+                        },
+                        targetColor
+                    )
+                ) {
+                    continue;
+                }
+
+                //set pixel color
+                data[pos] = fillColor.r;
+                data[pos + 1] = fillColor.g;
+                data[pos + 2] = fillColor.b;
+                data[pos + 3] = fillColor.a !== undefined ? fillColor.a : 255;
+
+                // add neighbouring pixels to queue
+                queue.push({ x: x + 1, y })
+                queue.push({ x: x - 1, y })
+                queue.push({ x, y: y + 1 })
+                queue.push({ x, y: y - 1 })
+            }
+            c.putImageData(imageData, 0, 0);
+        }
+
+        const hexToRgba = (hex) => {
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? {
+                r: parseInt(result[1], 16),
+                g: parseInt(result[2], 16),
+                b: parseInt(result[3], 16)
+            } : { r: 0, g: 0, b: 0 };
+        }
+
+        const colorsMatch = (color1, color2) => {
+            return (
+                // absolute check
+                // color1.r === color2.r &&
+                // color1.g === color2.g &&
+                // color1.b === color2.b &&
+                // (color1.a === undefined || color2.a === undefined || color1.a === color2.a)
+
+                //tolerance
+                Math.abs(color1.r - color2.r) < 5 &&
+                Math.abs(color1.g - color2.g) < 5 &&
+                Math.abs(color1.b - color2.b) < 5 &&
+                // const alphaMatch = Math.abs((color1.a || 255) - (color2.a || 255)) <= alphaTolerance;
+                Math.abs((color1.a || 255) - (color2.a || 255)) <= 5
+            )
         }
 
         // moved animate function outside of event listener
@@ -56,6 +149,7 @@ const Canvas = () => {
             c.lineJoin = 'round';
             c.lineCap = 'round';
             c.strokeStyle = color.current;
+            // c.strokeStyle = varColor;
             c.beginPath();
             c.moveTo(lastpos.current.x, lastpos.current.y);
             c.lineTo(x, y);
@@ -99,8 +193,11 @@ const Canvas = () => {
             // lastpos.current.x = x
             // lastpos.current.y = y
             // animating.current = requestAnimationFrame(animate)
-            if (curTool.current === 'brush'){
+            if (curTool.current === 'brush') {
                 draw(e);
+            }
+            else if (curTool.current === 'bucket') {
+                flood_fill(e.x, e.y)
             }
         })
         canvas.addEventListener('mouseup', () => {
@@ -152,11 +249,19 @@ const Canvas = () => {
                             </button>
                         </span>
                     </div>
+                    <div id='ToolSelect' className='flex p-3 bg-gray-200 rounded gap-3'>
+                        <div className='flex items-center justify-center'>
+                            <button onClick={() => { curTool.current = 'brush'; color.current = "#000000" }}><img src="/images/paint-brush-black.png" alt="ibrush" /></button>
+                        </div>
+                        <div className='flex items-center justify-center'>
+                            <button onClick={() => { curTool.current = 'bucket'; }}><img src="/images/paint-bucket-black.png" alt="ibucket" /></button>
+                        </div>
+                    </div>
                     <div id='colorSelect' className='border border-gray-500'>
                         <div className='flex'>
-                            <button id='#fff' onClick={handleColorChage} className='bg-white h-5 w-5'></button>
+                            <button id='#ffffff' onClick={handleColorChage} className='bg-white h-5 w-5'></button>
                             <button id='#364153' onClick={handleColorChage} className='bg-gray-700 h-5 w-5'></button>
-                            <button id='#000' onClick={handleColorChage} className='bg-black h-5 w-5'></button>
+                            <button id='#000000' onClick={handleColorChage} className='bg-black h-5 w-5'></button>
                             <button id='#e7000b' onClick={handleColorChage} className='bg-red-600 h-5 w-5'></button>
                             <button id='#9ae600' onClick={handleColorChage} className='bg-lime-400 h-5 w-5'></button>
                             <button id='#05df72' onClick={handleColorChage} className='bg-green-400 h-5 w-5'></button>
