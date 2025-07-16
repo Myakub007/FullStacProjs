@@ -214,7 +214,7 @@ const Canvas = () => {
 
         const canvas = canvasRef.current;
         const c = canvas.getContext('2d');
-        canvas.width = window.innerWidth / 2;
+        canvas.width = window.innerWidth / 2.5;
         canvas.height = window.innerHeight / 2;
         c.fillStyle = '#FFFFFF';
         c.fillRect(0, 0, canvas.width, canvas.height);
@@ -290,7 +290,7 @@ const Canvas = () => {
                             <button onClick={() => { curTool.current = 'bucket'; }}><img src="/images/paint-bucket-black.png" alt="ibucket" /></button>
                         </div>
                     </div>
-                    <div>
+                    <div className='bg-white p-2 rounded-full'>
                         <button onClick={undo}><img src="/images/undo-black.png" alt="undo" /></button>
                     </div>
                     <div id='colorSelect' className='border border-gray-500'>
