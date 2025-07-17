@@ -1,18 +1,28 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { use, useEffect, useRef, useState } from 'react'
 import '../index.css'
 import Avatar from '../components/AvatarSelect'
 
-const Lobby = ({setIsGameStarted}) => {
+const Lobby = ({setIsGameStarted,socket}) => {
+    const socketConnection = socket.current;
     const [nickname,setNickName] = useState('');
     const handleNickname = (e) =>{
         setNickName(e.target.value);
     }
     const startGame = () =>{
         setIsGameStarted(true);
+        socketConnection.emit('joinLobby',{nickname})
     }
-    useEffect(()=>{
-        console.log(nickname)
-    },[nickname])
+    useEffect(() => {
+        if(!socketConnection) return;
+        socketConnection.on('connect', () => {
+            console.log('connected');
+        })
+        socketConnection.on('userJoined', (s) => {
+            console.log(s);
+        });
+
+    },[socket]);
+
     return (
         <>
             <div className='bg-blue-900 h-screen'>
