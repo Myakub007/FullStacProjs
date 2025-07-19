@@ -8,16 +8,20 @@ const Chat = ({socket}) => {
     socket.emit('message',message);
     setMessage('');
   }
-    useEffect(()=>{
-      socket.on('serverMessage',(data)=>{
-        setMessages([...messages, {nickname: data.nickname, message: data.message}]);
-      });
-    },[socket, messages]);
+  useEffect(() => {
+    const handleServerMessage = (data) => {
+      setMessages(prevMessages => [...prevMessages, {nickname: data.nickname, message: data.message}]);
+    };
+    socket.on('serverMessage', handleServerMessage);
+    return () => {
+      socket.off('serverMessage', handleServerMessage);
+    };
+  }, [socket]);
   return (
     <>
       <div id='chat' className='bg-gray-200 h-[45vh] w-[15vw] relative'>
             <div className='font-bold'>Chat</div>
-            <div className='flex flex-col h-[80%] overflow-y-scroll'>
+            <div className='flex flex-col h-[38vh] overflow-y-auto '>
               {messages.map((message, index)=>(
                 <div key={index} className='w-full text-sm flex gap-2'><span>{message.nickname}:</span><p>{message.message}</p></div>
               ))}

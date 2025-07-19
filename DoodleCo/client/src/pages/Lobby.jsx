@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from 'react'
 import '../index.css'
 import Avatar from '../components/AvatarSelect'
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useSocket } from '../context/SocketContext';
 
 const Lobby = () => {
     const socketConnection = useSocket();
     const navigate = useNavigate();
+    const location = useLocation();
     const [nickname,setNickName] = useState('');
+    const roomIdToJoin = location.state?.roomId;
     const handleNickname = (e) =>{
         setNickName(e.target.value);
     }
@@ -27,6 +29,41 @@ const Lobby = () => {
                     })
             }
         })
+    }
+
+    const handlePlay = () => {
+        if (!nickname) {
+            alert('Please enter a nickname first!');
+            return;
+        }
+        if (roomIdToJoin) {
+            // Join the specific room as guest
+            socketConnection.emit('joinRoom', { roomID: roomIdToJoin, nickname, role: 'guest' }, (roomFound) => {
+                if (roomFound.success) {
+                    navigate(`/${roomIdToJoin}`, { state: { nickname, role: 'guest' } });
+                } else {
+                    alert('Failed to join the selected room.');
+                    navigate('/');
+                }
+            });
+        } else {
+            // Join a random room
+            socketConnection.emit('getAvailableRooms', (rooms) => {
+                if (!rooms || rooms.length === 0) {
+                    alert('No available rooms to join. Please create a private room.');
+                    return;
+                }
+                // Pick a random room
+                const randomRoomID = rooms[Math.floor(Math.random() * rooms.length)];
+                socketConnection.emit('joinRoom', { roomID: randomRoomID, nickname, role: 'guest' }, (roomFound) => {
+                    if (roomFound.success) {
+                        navigate(`/${randomRoomID}`, { state: { nickname, role: 'guest' } });
+                    } else {
+                        alert('Failed to join the selected room.');
+                    }
+                });
+            });
+        }
     }
 
     useEffect(() => {
@@ -52,8 +89,10 @@ const Lobby = () => {
                         </div>
                         <Avatar />
                         <div className='flex flex-col gap-2'>
-                            <button className='w-full bg-green-500 p-1 text-white text-2xl align-middle text-center'>Play !</button>
-                            <button onClick={handleRoomCreation} className='w-full bg-blue-400 p-2'>Create Private Room</button>
+                            <button className='w-full bg-green-500 p-1 text-white text-2xl align-middle text-center' onClick={handlePlay}>{roomIdToJoin ? 'Join Room' : 'Play !'}</button>
+                            { !roomIdToJoin && (
+                                <button onClick={handleRoomCreation} className='w-full bg-blue-400 p-2'>Create Private Room</button>
+                            )}
                         </div>
                     </div>
                 </div>

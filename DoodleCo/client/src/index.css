@@ -1,1 +1,22 @@
 @import 'tailwindcss';
+
+/* Custom scrollbar: only show thumb, make it black */
+::-webkit-scrollbar {
+  width: 8px;
+  background: blue;
+}
+::-webkit-scrollbar-thumb {
+  background: red;
+  border-radius: 8px;
+}
+::-webkit-scrollbar-track {
+  background: green;
+}
+
+/* For Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(204, 204, 204) transparent;
+}
+
+
