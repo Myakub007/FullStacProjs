@@ -1,25 +1,17 @@
 import React, { useEffect, useRef } from 'react'
 
-const StatusBar = ({timer}) => {
-  const [clock, setClock] = React.useState(timer);
-  const intervalRef = useRef(null);
+const StatusBar = ({socket}) => {
+  const [clock, setClock] = React.useState(60);
   useEffect(() => {
-    setClock(timer); // Reset timer when game starts or timer changes
+    if (!socket) return;
+    const handleTimerUpdate = (timer) => setClock(timer)
 
-    if (intervalRef.current) clearInterval(intervalRef.current);
+      socket.on('timerUpdate',handleTimerUpdate);
 
-    intervalRef.current = setInterval(() => {
-      setClock(prev => {
-        if (prev <= 1) {
-          clearInterval(intervalRef.current);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(intervalRef.current); // Clean on unmount
-  }, [timer]);
+      return ()=>{
+        socket.off('timerUpdate',handleTimerUpdate);
+      }
+  }, [socket]);
   return (
     <>
               <div id='statusBar' className=' bg-gray-200 items-center flex justify-between w-[60vw] max-h-fit px-3 border'>

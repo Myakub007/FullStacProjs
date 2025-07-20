@@ -18,6 +18,8 @@ const generateRoomID = () => {
 };
 const rooms = {};
 
+const roomTimers ={};
+
 
 app.get('/', (req, res) => {
     res.send('Socket.IO Server is running');});
@@ -25,13 +27,36 @@ app.get('/', (req, res) => {
 
 app.use(cors());
 
+function startRoomTimer(roomID) {
+    if (!rooms[roomID]) return;
+    // Clear any existing timer
+    if (roomTimers[roomID]) clearInterval(roomTimers[roomID]);
+
+    rooms[roomID].timer = parseInt(rooms[roomID].timer) || 60; // Ensure it's a number
+    roomTimers[roomID] = setInterval(() => {
+        if (!rooms[roomID]) {
+            clearInterval(roomTimers[roomID]);
+            return;
+        }
+        rooms[roomID].timer--;
+        io.to(roomID).emit('timerUpdate', rooms[roomID].timer);
+
+        if (rooms[roomID].timer <= 0) {
+            clearInterval(roomTimers[roomID]);
+            // Optionally: handle end of round/turn here
+        }
+    }, 1000);
+}
+
+
+
 io.on('connection',(socket) =>{
     socket.on('createRoom',({nickname,socketID},response)=>{
         let roomID;
         do{
             roomID = generateRoomID();
         } while (rooms[roomID]);
-        rooms[roomID] =[{nickname,socketID}];
+        rooms[roomID] ={players:[{nickname,socketID}],timer:60,rounds:5,words:3};
         socket.join(roomID);
         socket.nickname = nickname;
         socket.roomID = roomID;
@@ -42,14 +67,14 @@ io.on('connection',(socket) =>{
     })
     socket.on('joinRoom',({roomID,nickname,role},callback)=>{
         if(rooms[roomID]){
-            if (!rooms[roomID].some(player => player.socketID === socket.id)) {
-                rooms[roomID].push({nickname, socketID: socket.id});
+            if (!rooms[roomID].players.some(player => player.socketID === socket.id)) {
+                rooms[roomID].players.push({nickname, socketID: socket.id});
             }
             socket.join(roomID);
             socket.nickname = nickname;
             socket.roomID = roomID;
             socket.role = role;
-            io.to(roomID).emit('playerList', rooms[roomID]);
+            io.to(roomID).emit('playerList', rooms[roomID].players);
             callback && callback({success:true})
         }else{
             callback && callback({success:false})
@@ -58,11 +83,23 @@ io.on('connection',(socket) =>{
     socket.on('startGame',()=>{
         if(rooms[socket.roomID]){
             io.to(socket.roomID).emit('gameStarted');
+            startRoomTimer(socket.roomID)
+        }
+    });
+    socket.on('updateGameOptions', (data) => {
+        const { roomID, ...options } = data;
+        console.log('Received updateGameOptions:', data);
+        console.log('Current rooms:', Object.keys(rooms));
+        if (rooms[roomID]) {
+            Object.assign(rooms[roomID], options);
+            console.log('Updated room:', rooms[roomID]);
+        } else {
+            console.log('Room not found for roomID:', roomID);
         }
     });
     socket.on('getAvailableRooms', (callback) => {
         // Only return rooms with at least one player
-        const availableRooms = Object.keys(rooms).filter(roomID => rooms[roomID].length > 0);
+        const availableRooms = Object.keys(rooms).filter(roomID => rooms[roomID].players.length > 0);
         callback(availableRooms);
     });
 
@@ -72,13 +109,13 @@ io.on('connection',(socket) =>{
 
         const roomID = socket.roomID;
         if (roomID && rooms[roomID]){
-            rooms[roomID] = rooms[roomID].filter(player => player.socketID !== socket.id)
-            if (rooms[roomID].length === 0){
+            rooms[roomID].players = rooms[roomID].players.filter(player => player.socketID !== socket.id)
+            if (rooms[roomID].players.length === 0){
                 delete rooms[roomID];
                 console.log(`Room ${roomID} deleted because empty`)
             }
             else{
-                io.to(roomID).emit('playerList',rooms[roomID])
+                io.to(roomID).emit('playerList',rooms[roomID].players)
             }
         }
     });

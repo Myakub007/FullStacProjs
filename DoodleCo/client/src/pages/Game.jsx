@@ -58,7 +58,7 @@ const Game = () => {
   return (
     <>{gameStart?
       <div className='bg-blue-900 h-screen flex flex-col items-center justify-center gap-3'>
-      <StatusBar timer={timer} />
+      <StatusBar socket={socketConnection} />
       <div className='flex gap-4 justify-center items-center'>
         <PlayerScreen players={players} />
         <Canvas socket={socketConnection}/>
@@ -67,7 +67,7 @@ const Game = () => {
     </div>
     :
       <div className='bg-blue-900 h-screen flex flex-col items-center justify-center gap-3'>
-        <GameOptions socket={socketConnection} role={role} setTimer={setTimer} setWords={setWords} setRounds={setRounds} />
+        <GameOptions roomID={roomId} socket={socketConnection} role={role} setTimer={setTimer} setWords={setWords} setRounds={setRounds} />
         <div className='flex gap-4 justify-center items-center'>
           <PlayerScreen players={players} />
           <Chat socket={socketConnection}/>

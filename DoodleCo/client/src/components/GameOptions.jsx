@@ -1,20 +1,23 @@
 import React from 'react'
 import '../index.css'
 
-const GameOptions = ({socket,role,setTimer,setWords,setRounds}) => {
-  const handleStartGame = () => {
-    socket.emit('startGame')
-  }
+const GameOptions = ({socket,role,setTimer,setWords,setRounds,roomID}) => {
   const handleChange = (e) => {
-    if (e.target.name === 'timer') {
-      setTimer(e.target.value);
-    } else if (e.target.name === 'words') {
-      setWords(e.target.value);
-    } else if (e.target.name === 'rounds') {
-      setRounds(e.target.value);
+    const { name, value } = e.target;
+    if (name === 'timer') {
+      setTimer(value);
+    } else if (name === 'words') {
+      setWords(value);
+      
+    } else if (name === 'rounds') {
+      setRounds(value);
     }
+    socket.emit('updateGameOptions',{[name]:value,roomID:roomID})
   }
-
+  const handleStartGame = () => {
+    socket.emit('startGame');
+  }
+  
   return (
     <>
     <div className={role === 'host'?'bg-black':'bg-blue-300'}>
@@ -22,15 +25,15 @@ const GameOptions = ({socket,role,setTimer,setWords,setRounds}) => {
       <p className='text-white'>Choose your game options below:</p>
       <div className='flex flex-col gap-2 bg-gray-800 p-4 text-white rounded-lg'>
         <div>
-          <span>Round Timer</span><input disabled={role!=='host'} type="text" placeholder='60' className='px-3 mx-2' onChange={handleChange} name='timer'/>
+          <span>Round Timer</span><input disabled={role!=='host'} defaultValue={60} type="text" placeholder='60' className='px-3 mx-2' onChange={handleChange} name='timer'/>
           </div>
         <div>
           <span>No of rounds</span>
-          <input disabled={role!=='host'}  type="text" placeholder='5' className='px-3 mx-2' name='rounds' onChange={handleChange} />
+          <input disabled={role!=='host'} defaultValue={5}  type="text" placeholder='5' className='px-3 mx-2' name='rounds' onChange={handleChange} />
           </div>
         <div>
            <span>No of words</span>
-           <input disabled={role!=='host'}  type="text" placeholder='3' className='px-3 mx-2' onChange={handleChange} name='words'/>
+           <input disabled={role!=='host'} defaultValue={3} type="text" placeholder='3' className='px-3 mx-2' onChange={handleChange} name='words'/>
            </div>
       </div>
     </div>
