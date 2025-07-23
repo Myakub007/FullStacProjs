@@ -5,6 +5,7 @@ const {Server} = require('socket.io');
 const http = require('http');
 const Port = 3000;
 const crypto = require('crypto');
+const { start } = require('repl');
 
 const server = http.createServer(app);
 const io = new Server(server,{
@@ -31,20 +32,54 @@ function startRoomTimer(roomID) {
     if (!rooms[roomID]) return;
     // Clear any existing timer
     if (roomTimers[roomID]) clearInterval(roomTimers[roomID]);
+    
+    rooms[roomID].timer =rooms[roomID].drawingDuration || 60;
+    rooms[roomID].breakTimer = 10; // Default break time
+    rooms[roomID].isBreak = false; // Reset break state
 
-    rooms[roomID].timer = parseInt(rooms[roomID].timer) || 60; // Ensure it's a number
     roomTimers[roomID] = setInterval(() => {
         if (!rooms[roomID]) {
             clearInterval(roomTimers[roomID]);
             return;
         }
-        rooms[roomID].timer--;
-        io.to(roomID).emit('timerUpdate', rooms[roomID].timer);
+        if(rooms[roomID].isBreak){
+            rooms[roomID].breakTimer--;
+            io.to(roomID).emit('timerUpdate',{ 
+                timer: rooms[roomID].breakTimer,
+                isBreak: true
+            });
 
-        if (rooms[roomID].timer <= 0) {
-            clearInterval(roomTimers[roomID]);
-            // Optionally: handle end of round/turn here
+            // Check if break time is over
+            if(rooms[roomID].breakTimer <=0){
+                rooms[roomID].isBreak = false;
+                rooms[roomID].timer = rooms[roomID].drawingDuration || 60; // reset main timer
+                rooms[roomID].breakTimer = 10; // reset break timer
+                rooms[roomID].currentTurn = (rooms[roomID].currentTurn + 1)%rooms[roomID].players.length
+                rooms[roomID].currentPlayerSocketId = rooms[roomID].players[rooms[roomID].currentTurn].socketID;
+                io.to(roomID).emit('turnUpdate',{
+                    currentPlayerSocketId: rooms[roomID].currentPlayerSocketId,
+                    isBreak: false
+                })
+            }
         }
+        else{
+            //Main game phase
+            rooms[roomID].timer--;
+            io.to(roomID).emit('timerUpdate',{
+                timer: rooms[roomID].timer,
+                isBreak: false,
+            })
+
+            // main timer ended -> start break
+            if(rooms[roomID].timer <= 0 ){
+                rooms[roomID].isBreak = true;
+                io.to(roomID).emit('turnUpdate',{
+                    currentPlayer:null,
+                    isBreak:true,
+                })
+            }
+        }
+
     }, 1000);
 }
 
@@ -56,7 +91,17 @@ io.on('connection',(socket) =>{
         do{
             roomID = generateRoomID();
         } while (rooms[roomID]);
-        rooms[roomID] ={players:[{nickname,socketID}],timer:60,rounds:5,words:3};
+        rooms[roomID] ={
+            players:[{nickname,socketID}],
+            timer:60,
+            breakTimer:10,
+            currentTurn:0,
+            currentPlayerSocketId: socketID,
+            isBreak: false,
+            rounds:5,
+            words:3,
+            drawingDuration:60,
+        };
         socket.join(roomID);
         socket.nickname = nickname;
         socket.roomID = roomID;
@@ -82,17 +127,26 @@ io.on('connection',(socket) =>{
     })
     socket.on('startGame',()=>{
         if(rooms[socket.roomID]){
-            io.to(socket.roomID).emit('gameStarted');
+            rooms[socket.roomID].currentTurn = 0;
+            rooms[socket.roomID].isBreak = false;
+            io.to(socket.roomID).emit('gameStarted',
+                {currentPlayer: rooms[socket.roomID].players[0].nickname}
+            );
             startRoomTimer(socket.roomID)
         }
     });
     socket.on('updateGameOptions', (data) => {
         const { roomID, ...options } = data;
-        console.log('Received updateGameOptions:', data);
-        console.log('Current rooms:', Object.keys(rooms));
+        // console.log('Received updateGameOptions:', data);
+        // console.log('Current rooms:', Object.keys(rooms));
         if (rooms[roomID]) {
+            rooms[roomID].drawingDuration = options.timer || 60;
             Object.assign(rooms[roomID], options);
-            console.log('Updated room:', rooms[roomID]);
+
+            if(roomTimers[roomID]){
+                startRoomTimer(data.roomID)
+            }
+            // console.log('Updated room:', rooms[roomID]);
         } else {
             console.log('Room not found for roomID:', roomID);
         }
@@ -111,6 +165,7 @@ io.on('connection',(socket) =>{
         if (roomID && rooms[roomID]){
             rooms[roomID].players = rooms[roomID].players.filter(player => player.socketID !== socket.id)
             if (rooms[roomID].players.length === 0){
+                clearInterval(roomTimers[roomID]);
                 delete rooms[roomID];
                 console.log(`Room ${roomID} deleted because empty`)
             }

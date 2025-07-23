@@ -3,7 +3,7 @@ import { useRef, useEffect, useState } from 'react'
 import ToolBar from './ToolBar'
 
 
-const Canvas = () => {
+const Canvas = ({socket}) => {
     const canvasRef = useRef(null);
     const curMousePos = useRef({ x: 0, y: 0 })
     const isDrag = useRef(false);
@@ -13,11 +13,43 @@ const Canvas = () => {
     const color = useRef('#000000');
     // const [varColor,setVarColor] = useState('#000'); not working
     const curTool = useRef('brush');
+    const isPlayer = useRef(null)
 
 
     const maxStates = 20;
     //storing states
     const canvasStates = useRef([]);
+    const [isCanvasDisabled,setIsCanvasDisabled] = useState(false);
+    const [isDrawingActive, setIsDrawingActive] = useState(false);
+
+
+    useEffect(() => {
+        const handleTurnUpdate = (data) =>{
+            if(data.currentPlayerSocketId){
+                console.log("Current player socket ID:", data.currentPlayerSocketId);
+            }
+            if(socket.id){
+                console.log("Socket ID:", socket.id);
+            }
+            if(data.currentPlayerSocketId === socket.id){
+                console.log("match")
+                isPlayer.current = true;
+            }
+            console.log("Turn updated", data);
+            if(data.isBreak && isDrawingActive){
+                handleMouseUp();
+                isPlayer.current = false;
+            }
+            setIsCanvasDisabled(data.isBreak);
+        }
+      socket.on('turnUpdate', handleTurnUpdate)
+
+    
+      return () => {
+        socket.off('turnUpdate',handleTurnUpdate)
+      }
+    }, [isDrawingActive, socket])
+    
 
     const saveCanvasState = () => {
         const canvas = canvasRef.current
@@ -50,6 +82,7 @@ const Canvas = () => {
         // setVarColor(e.target.id)
     }
     const handleMouseUp = () => {
+        setIsDrawingActive(false)
         lastpos.current.x = 0
         lastpos.current.y = 0
         isDrag.current = false
@@ -57,6 +90,7 @@ const Canvas = () => {
         saveCanvasState();
     }
     const handleMouseLeave = () => {
+        setIsDrawingActive(false);
         lastpos.current.x = 0
         lastpos.current.y = 0
         if (isDrag.current) {
@@ -67,12 +101,17 @@ const Canvas = () => {
     }
 
     const handleMouseDown = (e) => {
-        if (curTool.current === 'brush') {
-            draw(e);
-        }
-        else if (curTool.current === 'bucket') {
-            flood_fill(e.x, e.y)
-        }
+        if (isCanvasDisabled) return;
+        setIsDrawingActive(true);
+        if(isPlayer.current){
+            console.log("Current player, drawing enabled")
+            if (curTool.current === 'brush') {
+                draw(e);
+            }
+            else if (curTool.current === 'bucket') {
+                flood_fill(e.x, e.y)
+            }
+        } // if not current player, do nothing
     }
     const draw = (e) => {
         const canvas = canvasRef.current;
@@ -206,6 +245,7 @@ const Canvas = () => {
     };
 
     const handleMouseMove = (e) => {
+        if (isCanvasDisabled) return;
         const rect = canvasRef.current.getBoundingClientRect();
         curMousePos.current.x = e.x - rect.left;
         curMousePos.current.y = e.y - rect.top;
@@ -241,17 +281,22 @@ const Canvas = () => {
             handleMouseLeave
         )
         return () => {
-            removeEventListener('mousedown', handleMouseDown)
-            removeEventListener('mouseup', handleMouseUp)
-            removeEventListener('mouseleave', handleMouseLeave)
-            removeEventListener('mousemove', handleMouseMove)
+            canvas.removeEventListener('mousedown', handleMouseDown)
+            canvas.removeEventListener('mouseup', handleMouseUp)
+            canvas.removeEventListener('mouseleave', handleMouseLeave)
+            canvas.removeEventListener('mousemove', handleMouseMove)
         }
     }, [])
 
     return (
         <>
-            <div className='flex flex-col items-center gap-1 w-1/2 m-auto'>
-                <canvas className='border-2 border-red-500' ref={canvasRef}></canvas>
+            <div className='flex flex-col items-center gap-1 w-1/2 m-auto relative'>
+                <canvas className='border-2 border-red-500' ref={canvasRef} style={{opacity:isCanvasDisabled ? 0.5:1}}></canvas>
+                {isCanvasDisabled && (
+                    <div className='absolute inset-0 bg-gray-500 bg-opacity-50 flex items-center justify-center'>
+                        <span className='text-white text-4xl font-bold'>BREAK</span>
+                    </div>
+                )}
                 <ToolBar handleColorChage={handleColorChage} undo={undo} lineWidth={lineWidth} curTool={curTool} color={color} />
             </div>
         </>

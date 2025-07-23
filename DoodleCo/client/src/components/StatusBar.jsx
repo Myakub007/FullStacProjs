@@ -4,7 +4,7 @@ const StatusBar = ({socket}) => {
   const [clock, setClock] = React.useState(60);
   useEffect(() => {
     if (!socket) return;
-    const handleTimerUpdate = (timer) => setClock(timer)
+    const handleTimerUpdate = (data) => setClock(data.timer)
 
       socket.on('timerUpdate',handleTimerUpdate);
 
