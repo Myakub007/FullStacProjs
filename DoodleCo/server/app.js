@@ -129,12 +129,19 @@ io.on('connection',(socket) =>{
         if(rooms[socket.roomID]){
             rooms[socket.roomID].currentTurn = 0;
             rooms[socket.roomID].isBreak = false;
-            io.to(socket.roomID).emit('gameStarted',
-                {currentPlayer: rooms[socket.roomID].players[0].nickname}
-            );
+            io.to(socket.roomID).emit('gameStarted');
             startRoomTimer(socket.roomID)
         }
     });
+    socket.on('curentPlayer',()=>{
+        if(rooms[socket.roomID]){
+            socket.emit('currentPlayer', {
+                currentPlayerSocketId: rooms[socket.roomID].players[rooms[socket.roomID].currentTurn].socketID,
+                isBreak: false
+            });
+        }
+});
+
     socket.on('updateGameOptions', (data) => {
         const { roomID, ...options } = data;
         // console.log('Received updateGameOptions:', data);

@@ -3,7 +3,7 @@ import { useRef, useEffect, useState } from 'react'
 import ToolBar from './ToolBar'
 
 
-const Canvas = ({socket}) => {
+const Canvas = ({ socket }) => {
     const canvasRef = useRef(null);
     const curMousePos = useRef({ x: 0, y: 0 })
     const isDrag = useRef(false);
@@ -19,37 +19,45 @@ const Canvas = ({socket}) => {
     const maxStates = 20;
     //storing states
     const canvasStates = useRef([]);
-    const [isCanvasDisabled,setIsCanvasDisabled] = useState(false);
+    const [isCanvasDisabled, setIsCanvasDisabled] = useState(false);
     const [isDrawingActive, setIsDrawingActive] = useState(false);
 
 
     useEffect(() => {
-        const handleTurnUpdate = (data) =>{
-            if(data.currentPlayerSocketId){
+        const handleTurnUpdate = (data) => {
+            if (data.currentPlayerSocketId) {
                 console.log("Current player socket ID:", data.currentPlayerSocketId);
             }
-            if(socket.id){
+            if (socket.id) {
                 console.log("Socket ID:", socket.id);
             }
-            if(data.currentPlayerSocketId === socket.id){
+            if (data.currentPlayerSocketId === socket.id) {
                 console.log("match")
                 isPlayer.current = true;
             }
             console.log("Turn updated", data);
-            if(data.isBreak && isDrawingActive){
+            if (data.isBreak && isDrawingActive) {
                 handleMouseUp();
                 isPlayer.current = false;
             }
             setIsCanvasDisabled(data.isBreak);
         }
-      socket.on('turnUpdate', handleTurnUpdate)
+        socket.on('turnUpdate', handleTurnUpdate)
+        socket.on('currentPlayer', (data) => {
+            if (data.currentPlayerSocketId === socket.id) {
+                isPlayer.current = true;
+                setIsCanvasDisabled(false);
+                setIsDrawingActive(true);
+                console.log("You are the current player");
+            }
+        });
 
-    
-      return () => {
-        socket.off('turnUpdate',handleTurnUpdate)
-      }
+
+        return () => {
+            socket.off('turnUpdate', handleTurnUpdate)
+        }
     }, [isDrawingActive, socket])
-    
+
 
     const saveCanvasState = () => {
         const canvas = canvasRef.current
@@ -103,7 +111,7 @@ const Canvas = ({socket}) => {
     const handleMouseDown = (e) => {
         if (isCanvasDisabled) return;
         setIsDrawingActive(true);
-        if(isPlayer.current){
+        if (isPlayer.current) {
             console.log("Current player, drawing enabled")
             if (curTool.current === 'brush') {
                 draw(e);
@@ -291,7 +299,7 @@ const Canvas = ({socket}) => {
     return (
         <>
             <div className='flex flex-col items-center gap-1 w-1/2 m-auto relative'>
-                <canvas className='border-2 border-red-500' ref={canvasRef} style={{opacity:isCanvasDisabled ? 0.5:1}}></canvas>
+                <canvas className='border-2 border-red-500' ref={canvasRef} style={{ opacity: isCanvasDisabled ? 0.5 : 1 }}></canvas>
                 {isCanvasDisabled && (
                     <div className='absolute inset-0 bg-gray-500 bg-opacity-50 flex items-center justify-center'>
                         <span className='text-white text-4xl font-bold'>BREAK</span>

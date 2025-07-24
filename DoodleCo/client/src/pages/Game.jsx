@@ -9,7 +9,7 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useSocket } from '../context/SocketContext';
 
 const Game = () => {
-  const {roomId} = useParams();
+  const { roomId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
   const [gameStart, setGameStart] = useState(false);
@@ -33,7 +33,7 @@ const Game = () => {
       navigate('/', { state: { roomId } });
       return;
     }
-    socketConnection.emit('joinRoom', { roomID, nickname, role:role}, (response) => {
+    socketConnection.emit('joinRoom', { roomID, nickname, role: role }, (response) => {
       if (response.success) {
         console.log("Joined room:", roomID);
         // optionally set user state or load game state here
@@ -47,30 +47,31 @@ const Game = () => {
     });
     socketConnection.on('gameStarted', () => {
       setGameStart(true);
+      socketConnection.emit('curentPlayer');
     });
 
-  }, [roomId,nickname, navigate, socketConnection, location.state]);
+  }, [roomId, nickname, navigate, socketConnection, location.state]);
 
-  if(!nickname){
+  if (!nickname) {
     return <div>Retry</div>
   }
-  
+
   return (
-    <>{gameStart?
+    <>{gameStart ?
       <div className='bg-blue-900 h-screen flex flex-col items-center justify-center gap-3'>
-      <StatusBar socket={socketConnection} />
-      <div className='flex gap-4 justify-center items-center'>
-        <PlayerScreen players={players} />
-        <Canvas socket={socketConnection}/>
-        <Chat socket={socketConnection}/>
+        <StatusBar socket={socketConnection} />
+        <div className='flex gap-4 justify-center items-center'>
+          <PlayerScreen players={players} />
+          <Canvas socket={socketConnection} />
+          <Chat socket={socketConnection} />
+        </div>
       </div>
-    </div>
-    :
+      :
       <div className='bg-blue-900 h-screen flex flex-col items-center justify-center gap-3'>
         <GameOptions roomID={roomId} socket={socketConnection} role={role} setTimer={setTimer} setWords={setWords} setRounds={setRounds} />
         <div className='flex gap-4 justify-center items-center'>
           <PlayerScreen players={players} />
-          <Chat socket={socketConnection}/>
+          <Chat socket={socketConnection} />
         </div>
       </div>
     }
