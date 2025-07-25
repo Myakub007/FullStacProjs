@@ -5,7 +5,6 @@ const {Server} = require('socket.io');
 const http = require('http');
 const Port = 3000;
 const crypto = require('crypto');
-const { start } = require('repl');
 
 const server = http.createServer(app);
 const io = new Server(server,{
@@ -18,6 +17,7 @@ const generateRoomID = () => {
   return crypto.randomBytes(6).toString('base64').replace(/[+/=]/g, '').slice(0, 8);
 };
 const rooms = {};
+let currentCanvasState = null;
 
 const roomTimers ={};
 
@@ -86,6 +86,12 @@ function startRoomTimer(roomID) {
 
 
 io.on('connection',(socket) =>{
+    socket.on('clear-canvas',()=>{
+        socket.to(socket.roomID).emit('canvas-cleared')
+        currentCanvasState = null; // Reset canvas state when cleared
+        io.to(socket.roomID).emit('init-canvas', currentCanvasState)
+    });
+    
     socket.on('createRoom',({nickname,socketID},response)=>{
         let roomID;
         do{
@@ -101,6 +107,9 @@ io.on('connection',(socket) =>{
             rounds:5,
             words:3,
             drawingDuration:60,
+            wordTimer: 15,
+            isSelectingWord: false,
+            selectedWord: null,
         };
         socket.join(roomID);
         socket.nickname = nickname;
@@ -108,7 +117,6 @@ io.on('connection',(socket) =>{
         socket.role = 'host';
         io.to(roomID).emit('playerList', rooms[roomID]);
         response({success:true,roomID})
-
     })
     socket.on('joinRoom',({roomID,nickname,role},callback)=>{
         if(rooms[roomID]){
@@ -129,8 +137,10 @@ io.on('connection',(socket) =>{
         if(rooms[socket.roomID]){
             rooms[socket.roomID].currentTurn = 0;
             rooms[socket.roomID].isBreak = false;
+             currentCanvasState = null; // Reset canvas state when game starts
             io.to(socket.roomID).emit('gameStarted');
             startRoomTimer(socket.roomID)
+            io.to(socket.roomID).emit('init-canvas', currentCanvasState)
         }
     });
     socket.on('curentPlayer',()=>{
@@ -141,6 +151,30 @@ io.on('connection',(socket) =>{
             });
         }
 });
+
+socket.on('drawing-start', (startData) => {
+  socket.to(socket.roomID).emit('remote-drawing', {
+    type: 'path',
+    path: [{x: startData.x, y: startData.y}],
+    color: startData.color,
+    lineWidth: startData.lineWidth,
+    socketId: startData.socketId
+  });
+});
+
+socket.on('drawing-move', (moveData) => {
+  socket.to(socket.roomID).emit('remote-drawing', {
+    type: 'path',
+    path: [moveData.from, moveData.to],
+    color: moveData.color,
+    lineWidth: moveData.lineWidth,
+    socketId: moveData.socketId
+  });
+});
+
+    socket.on('fill',(fillData)=>{
+        socket.to(socket.roomID).emit('remote-fill',fillData);
+    })
 
     socket.on('updateGameOptions', (data) => {
         const { roomID, ...options } = data;
@@ -165,7 +199,7 @@ io.on('connection',(socket) =>{
     });
 
     socket.on('disconnect',()=>{
-        socket.broadcast.emit('userLeft',`${socket.nickname} has left the lobby`);
+        socket.to(socket.roomID).emit('userLeft',`${socket.nickname} has left the lobby`);
         console.log('Disconnected',socket.id);
 
         const roomID = socket.roomID;

@@ -13,7 +13,7 @@ const Canvas = ({ socket }) => {
     const color = useRef('#000000');
     // const [varColor,setVarColor] = useState('#000'); not working
     const curTool = useRef('brush');
-    const isPlayer = useRef(null)
+    const isPlayer = useRef(null);
 
 
     const maxStates = 20;
@@ -21,40 +21,139 @@ const Canvas = ({ socket }) => {
     const canvasStates = useRef([]);
     const [isCanvasDisabled, setIsCanvasDisabled] = useState(false);
     const [isDrawingActive, setIsDrawingActive] = useState(false);
+    const [remotePaths, setRemotePaths] = useState([]);
 
 
     useEffect(() => {
+        socket.on('init-canvas', (initialState) => {
+            const canvas = canvasRef.current;
+            const ctx = canvas.getContext('2d');
+            loadCanvasState(ctx, initialState);
+            saveCanvasState();
+        })
+        socket.on('remote-drawing', (drawingData) => {
+            if (drawingData.socketId !== socket.id) {
+                setRemotePaths(prev => [...prev, drawingData]);
+            }
+        });
+
+        socket.on('remote-fill', (fillData) => {
+            if (fillData.socketID !== socket.id) {
+                executeRemoteFill(fillData);
+            }
+        })
+        return () => {
+            socket.off('init-canvas');
+            socket.off('remote-drawing');
+            socket.off('remote-fill');
+        }
+    }, [socket])
+
+
+    useEffect(() => {
+        if (remotePaths.length === 0) return;
+
+        const canvas = canvasRef.current;
+        const ctx = canvas.getContext('2d');
+
+        // Process all pending remote paths
+        remotePaths.forEach(pathData => {
+            drawRemotePath(ctx, {
+                path: pathData.path,
+                color: pathData.color,
+                lineWidth: pathData.lineWidth
+            });
+        });
+
+        // Clear processed paths
+        setRemotePaths([]);
+        saveCanvasState();
+    }, [remotePaths]);
+
+    const drawRemotePath = (ctx, { path, color, lineWidth }) => {
+        ctx.strokeStyle = color;
+        ctx.lineWidth = lineWidth;
+        ctx.lineJoin = 'round';
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+
+        path.forEach((point, i) => {
+            if (i === 0) {
+                ctx.moveTo(point.x, point.y)
+            } else {
+                ctx.lineTo(point.x, point.y)
+            }
+        });
+
+        ctx.stroke();
+    }
+
+    const executeRemoteFill = ({ x, y, color }) => {
+        const canvas = canvasRef.current;
+        const rect = canvas.getBoundingClientRect();
+        const adjustedX = x - rect.left;
+        const adjustedY = y - rect.top;
+
+        const tempColor = color.current;
+        color.current = color;
+
+        flood_fill(adjustedX, adjustedY);
+
+        color.current = tempColor;
+        saveCanvasState();
+    }
+
+
+    useEffect(() => {
+
+        const clearCanvas = () => {
+            const canvas = canvasRef.current;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            canvasStates.current = [];
+            saveCanvasState();
+        };
         const handleTurnUpdate = (data) => {
-            if (data.currentPlayerSocketId) {
-                console.log("Current player socket ID:", data.currentPlayerSocketId);
-            }
-            if (socket.id) {
-                console.log("Socket ID:", socket.id);
-            }
+            // if (data.currentPlayerSocketId) {
+            //     console.log("Current player socket ID:", data.currentPlayerSocketId);
+            // }
+            // if (socket.id) {
+            //     console.log("Socket ID:", socket.id);
+            // }
             if (data.currentPlayerSocketId === socket.id) {
-                console.log("match")
+                // console.log("match")
                 isPlayer.current = true;
+                setIsCanvasDisabled(data.isBreak);
+                setIsDrawingActive(!data.isBreak);
+                socket.emit('clear-canvas');
             }
-            console.log("Turn updated", data);
+            else {
+                isPlayer.current = false;
+                setIsCanvasDisabled(data.isBreak);
+                setIsDrawingActive(!data.isBreak);
+            }
+            // console.log("Turn updated", data);
             if (data.isBreak && isDrawingActive) {
                 handleMouseUp();
                 isPlayer.current = false;
             }
-            setIsCanvasDisabled(data.isBreak);
         }
         socket.on('turnUpdate', handleTurnUpdate)
         socket.on('currentPlayer', (data) => {
             if (data.currentPlayerSocketId === socket.id) {
                 isPlayer.current = true;
-                setIsCanvasDisabled(false);
-                setIsDrawingActive(true);
+                setIsCanvasDisabled(data.isBreak);
+                setIsDrawingActive(!data.isBreak);
                 console.log("You are the current player");
             }
         });
-
+        socket.on('canvas-cleared', clearCanvas);
 
         return () => {
             socket.off('turnUpdate', handleTurnUpdate)
+            socket.off('currentPlayer');
+            socket.off('canvas-cleared');
         }
     }, [isDrawingActive, socket])
 
@@ -122,26 +221,45 @@ const Canvas = ({ socket }) => {
         } // if not current player, do nothing
     }
     const draw = (e) => {
+        if (!isPlayer.current) return;
+
         const canvas = canvasRef.current;
-        const c = canvas.getContext('2d');
+        const ctx = canvas.getContext('2d');
         isDrag.current = true
         const rect = canvas.getBoundingClientRect();
         let x = e.x - rect.left;
         let y = e.y - rect.top;
+
+        if (lastpos.current.x === 0 && lastpos.current.y === 0) {
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.lineWidth = lineWidth.current;
+            ctx.strokeStyle = color.current;
+            ctx.lineJoin = 'round';
+            ctx.lineCap = 'round';
+
+            socket.emit('drawing-start', {
+                x, y,
+                color: color.current,
+                lineWidth: lineWidth.current,
+                socketId: socket.id
+            })
+        }
+
         lastpos.current.x = x
         lastpos.current.y = y
         animating.current = requestAnimationFrame(animate)
     }
     const flood_fill = (startX, startY) => {
         const canvas = canvasRef.current;
-        const c = canvas.getContext('2d');
+        const ctx = canvas.getContext('2d');
         //correcting mouse position
         const rect = canvas.getBoundingClientRect();
         const x = Math.floor(startX - rect.left);
         const y = Math.floor(startY - rect.top);
 
         // canvas pixel data
-        const imageData = c.getImageData(0, 0, canvas.width, canvas.height)
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
         const data = imageData.data;
 
         //convert color from hex to RGBA
@@ -197,7 +315,14 @@ const Canvas = ({ socket }) => {
             queue.push({ x, y: y + 1 })
             queue.push({ x, y: y - 1 })
         }
-        c.putImageData(imageData, 0, 0);
+        ctx.putImageData(imageData, 0, 0);
+
+        socket.emit('fill', {
+            x: startX,
+            y: startY,
+            color: color.current,
+            socketId: socket.id
+        })
     }
 
     const hexToRgba = (hex) => {
@@ -228,21 +353,29 @@ const Canvas = ({ socket }) => {
 
     // moved animate function outside of event listener
     const animate = () => {
-        const canvas = canvasRef.current;
-        const c = canvas.getContext('2d');
         if (!isDrag.current) return; // Don't animate if not dragging
 
+        const canvas = canvasRef.current;
+        const ctx = canvas.getContext('2d');
         const { x, y } = curMousePos.current;
 
-        c.lineWidth = lineWidth.current;
-        c.lineJoin = 'round';
-        c.lineCap = 'round';
-        c.strokeStyle = color.current;
-        // c.strokeStyle = varColor;
-        c.beginPath();
-        c.moveTo(lastpos.current.x, lastpos.current.y);
-        c.lineTo(x, y);
-        c.stroke();
+        ctx.lineWidth = lineWidth.current;
+        ctx.lineJoin = 'round';
+        ctx.lineCap = 'round';
+        ctx.strokeStyle = color.current;
+        // ctx.strokeStyle = varColor;
+        ctx.beginPath();
+        ctx.moveTo(lastpos.current.x, lastpos.current.y);
+        ctx.lineTo(x, y);
+        ctx.stroke();
+
+        socket.emit('drawing-move', {
+            from: lastpos.current,
+            to: { x, y },
+            color: color.current,
+            lineWidth: lineWidth.current,
+            socketId: socket.id
+        })
 
         // Update last position
         lastpos.current.x = x;
@@ -251,6 +384,15 @@ const Canvas = ({ socket }) => {
         // Continue animation
         animating.current = requestAnimationFrame(animate);
     };
+
+    const loadCanvasState = (ctx, imageData) => {
+        if (imageData) {
+            ctx.putImageData(imageData, 0, 0);
+        } else {
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+        }
+    }
 
     const handleMouseMove = (e) => {
         if (isCanvasDisabled) return;
@@ -262,11 +404,11 @@ const Canvas = ({ socket }) => {
     useEffect(() => {
 
         const canvas = canvasRef.current;
-        const c = canvas.getContext('2d');
+        const ctx = canvas.getContext('2d');
         canvas.width = window.innerWidth / 2.5;
         canvas.height = window.innerHeight / 2;
-        c.fillStyle = '#FFFFFF';
-        c.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
         canvasStates.current = [];
         saveCanvasState();
 
@@ -305,7 +447,11 @@ const Canvas = ({ socket }) => {
                         <span className='text-white text-4xl font-bold'>BREAK</span>
                     </div>
                 )}
-                <ToolBar handleColorChage={handleColorChage} undo={undo} lineWidth={lineWidth} curTool={curTool} color={color} />
+                {
+                    isPlayer.current && (
+                        <ToolBar handleColorChage={handleColorChage} undo={undo} lineWidth={lineWidth} curTool={curTool} color={color} />
+                    )
+                }
             </div>
         </>
     )
