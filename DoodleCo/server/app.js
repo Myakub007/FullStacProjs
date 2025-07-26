@@ -173,6 +173,7 @@ socket.on('drawing-move', (moveData) => {
 });
 
     socket.on('fill',(fillData)=>{
+        console.log(fillData);
         socket.to(socket.roomID).emit('remote-fill',fillData);
     })
 

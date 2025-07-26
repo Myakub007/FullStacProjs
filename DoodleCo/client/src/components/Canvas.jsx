@@ -38,7 +38,7 @@ const Canvas = ({ socket }) => {
         });
 
         socket.on('remote-fill', (fillData) => {
-            if (fillData.socketID !== socket.id) {
+            if (fillData.socketId !== socket.id) {
                 executeRemoteFill(fillData);
             }
         })
@@ -88,16 +88,12 @@ const Canvas = ({ socket }) => {
         ctx.stroke();
     }
 
-    const executeRemoteFill = ({ x, y, color }) => {
-        const canvas = canvasRef.current;
-        const rect = canvas.getBoundingClientRect();
-        const adjustedX = x - rect.left;
-        const adjustedY = y - rect.top;
+    const executeRemoteFill = (fillData) => {
 
         const tempColor = color.current;
-        color.current = color;
+        color.current = fillData.color;
 
-        flood_fill(adjustedX, adjustedY);
+        flood_fill(fillData.x, fillData.y);
 
         color.current = tempColor;
         saveCanvasState();
@@ -155,7 +151,7 @@ const Canvas = ({ socket }) => {
             socket.off('currentPlayer');
             socket.off('canvas-cleared');
         }
-    }, [isDrawingActive, socket])
+    }, [socket])
 
 
     const saveCanvasState = () => {
@@ -216,7 +212,11 @@ const Canvas = ({ socket }) => {
                 draw(e);
             }
             else if (curTool.current === 'bucket') {
-                flood_fill(e.x, e.y)
+                const canvas = canvasRef.current
+                const rect = canvas.getBoundingClientRect();
+                const x = Math.floor(e.x - rect.left);
+                const y = Math.floor(e.y - rect.top);
+                flood_fill(x, y)
             }
         } // if not current player, do nothing
     }
@@ -254,9 +254,8 @@ const Canvas = ({ socket }) => {
         const canvas = canvasRef.current;
         const ctx = canvas.getContext('2d');
         //correcting mouse position
-        const rect = canvas.getBoundingClientRect();
-        const x = Math.floor(startX - rect.left);
-        const y = Math.floor(startY - rect.top);
+        const x = startX
+        const y = startY
 
         // canvas pixel data
         const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
@@ -315,14 +314,19 @@ const Canvas = ({ socket }) => {
             queue.push({ x, y: y + 1 })
             queue.push({ x, y: y - 1 })
         }
-        ctx.putImageData(imageData, 0, 0);
+        ctx.putImageData(imageData, 0, 0);        
 
-        socket.emit('fill', {
-            x: startX,
-            y: startY,
-            color: color.current,
-            socketId: socket.id
-        })
+        if (isPlayer.current) {
+            socket.emit('fill', {
+                x: startX ,
+                y: startY ,
+
+                color: color.current,
+                socketId: socket.id
+            })
+        }
+
+        saveCanvasState();
     }
 
     const hexToRgba = (hex) => {

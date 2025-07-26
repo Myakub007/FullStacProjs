@@ -35,7 +35,7 @@ const ToolBar = ({ handleColorChage, undo, lineWidth, color, curTool }) => {
                             </button>
                         </span>
                     </div>
-                    <div id='ToolSelect' className='flex p-3 bg-gray-200 rounded gap-3'>
+                    <div id='ToolSelect' className='flex lg:w-fit w-[10vw] p-1 bg-gray-200 rounded gap-3'>
                         <div className='flex items-center justify-center'>
                             <button onClick={() => { curTool.current = 'brush'; color.current = "#000000" }}><img src="/images/paint-brush-black.png" alt="ibrush" /></button>
                         </div>
@@ -43,7 +43,7 @@ const ToolBar = ({ handleColorChage, undo, lineWidth, color, curTool }) => {
                             <button onClick={() => { curTool.current = 'bucket'; }}><img src="/images/paint-bucket-black.png" alt="ibucket" /></button>
                         </div>
                     </div>
-                    <div className='bg-white p-2 rounded-full'>
+                    <div className='bg-white md:p-2 w-[5vw] p-1 rounded-full'>
                         <button onClick={undo}><img src="/images/undo-black.png" alt="undo" /></button>
                     </div>
                     <div id='colorSelect' className='border border-gray-500'>
