@@ -5,6 +5,7 @@ const {Server} = require('socket.io');
 const http = require('http');
 const Port = 3000;
 const crypto = require('crypto');
+const fs = require('fs');
 
 const server = http.createServer(app);
 const io = new Server(server,{
@@ -20,6 +21,21 @@ const rooms = {};
 let currentCanvasState = null;
 
 const roomTimers ={};
+
+let words = [];
+if(words.length === 0){
+    words = fs.readFileSync(__dirname+'/words.txt','utf-8').split(',').map(word => word.trim());
+}
+
+const getRandomWords =()=>{
+    const shuffled = [...words];
+
+    for (let i = shuffled.length-1;i>0;i--){
+        const j = Math.floor(Math.random() * (i+1));
+        [shuffled[i],shuffled[j]] = [shuffled[j],shuffled[i]];
+    }
+    return shuffled.slice(0,3);
+}
 
 
 app.get('/', (req, res) => {
@@ -43,6 +59,9 @@ function startRoomTimer(roomID) {
     rooms[roomID].breakTimer = 10; // Default break time
     rooms[roomID].isBreak = false; // Reset break state
     rooms[roomID].wordTimer = 15; // Default word timer
+
+    let result = [];
+
     // rooms[roomID].isSelectingWord = false; //reset word selection
 
     roomTimers[roomID] = setInterval(() => {
@@ -56,6 +75,7 @@ function startRoomTimer(roomID) {
                 timer: rooms[roomID].breakTimer,
                 isBreak: true
             });
+            rooms[roomID].selectedWord = null;
 
             // Check if break time is over
             if(rooms[roomID].breakTimer <=0){
@@ -72,9 +92,13 @@ function startRoomTimer(roomID) {
         }
         else if(rooms[roomID].isSelectingWord){
             rooms[roomID].wordTimer--;
-            io.to(roomID).emit('selectWord',
-
-            )
+            if(result.length === 0){
+                result = getRandomWords();
+                io.to(roomID).emit('selectWord',
+                    {words:result}
+                )
+                console.log(result);
+            }
             io.to(roomID).emit('timerUpdate',{
                 timer: rooms[roomID].wordTimer
             })
@@ -88,6 +112,7 @@ function startRoomTimer(roomID) {
                 rooms[roomID].timer = rooms[roomID].drawingDuration || 60;
                 rooms[roomID].wordTimer = 15;
                 io.emit('selectRandomWord')
+                result =[];
                 console.log('someword selected');
             }
         }
@@ -181,6 +206,10 @@ io.on('connection',(socket) =>{
             });
         }
 });
+
+socket.on('wordSelected',({word})=>{
+    rooms[socket.roomID].selectedWord = word;
+})
 
 socket.on('drawing-start', (startData) => {
   socket.to(socket.roomID).emit('remote-drawing', {
