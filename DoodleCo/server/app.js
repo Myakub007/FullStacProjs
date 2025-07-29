@@ -27,14 +27,14 @@ if(words.length === 0){
     words = fs.readFileSync(__dirname+'/words.txt','utf-8').split(',').map(word => word.trim());
 }
 
-const getRandomWords =()=>{
+const getRandomWords =(roomID)=>{
     const shuffled = [...words];
 
     for (let i = shuffled.length-1;i>0;i--){
         const j = Math.floor(Math.random() * (i+1));
         [shuffled[i],shuffled[j]] = [shuffled[j],shuffled[i]];
     }
-    return shuffled.slice(0,3);
+    return shuffled.slice(0,rooms[roomID].words);
 }
 
 
@@ -93,7 +93,7 @@ function startRoomTimer(roomID) {
         else if(rooms[roomID].isSelectingWord){
             rooms[roomID].wordTimer--;
             if(result.length === 0){
-                result = getRandomWords();
+                result = getRandomWords(roomID);
                 io.to(roomID).emit('selectWord',
                     {words:result}
                 )
