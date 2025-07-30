@@ -1,15 +1,28 @@
 import React, { useEffect, useRef } from 'react'
+import { useState } from 'react';
 
 const StatusBar = ({socket}) => {
-  const [clock, setClock] = React.useState(60);
+  const [clock, setClock] = useState(60);
+  const [currentPlayer,setCurrentPlayer] = useState(false);
+  const [word,setWord] = useState(null);
   useEffect(() => {
     if (!socket) return;
     const handleTimerUpdate = (data) => setClock(data.timer)
 
       socket.on('timerUpdate',handleTimerUpdate);
+      socket.on('drawer',(data)=>{
+        if(socket.id === data.player){
+          setCurrentPlayer(true);
+          setWord(data.word);
+        }
+      })
+      socket.on('remove',()=>{
+        setWord(null);
+      })
 
       return ()=>{
         socket.off('timerUpdate',handleTimerUpdate);
+        socket.off('remove')
       }
   }, [socket]);
   return (
@@ -27,7 +40,7 @@ const StatusBar = ({socket}) => {
 
           <div className='flex flex-col gap-0 p-1 items-center justify-center'>
             <div className='text-sm'>Guess the Word</div>
-            <div className='font-bold text-xl'>------</div>
+            {currentPlayer&&word?(<div className='font-bold text-xl'>{word}</div>):(<div className='font-bold text-xl'>------</div>)}
           </div>
 
           <div><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="35" height="35" color="#000000" fill="none">

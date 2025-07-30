@@ -27,9 +27,9 @@ const Canvas = ({ socket }) => {
     
     const handleSelection = (e)=>{
         socket.emit('wordSelected',{
-            word: e.target.name
+            word: e.target.name,
+            currentPlayer: socket.id
         })
-        console.log(e.target.name)
     }
     useEffect(() => {
         socket.on('init-canvas', (initialState) => {

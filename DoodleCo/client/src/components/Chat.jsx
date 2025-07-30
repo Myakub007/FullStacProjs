@@ -11,12 +11,19 @@ const Chat = ({socket}) => {
   useEffect(() => {
     const handleServerMessage = (data) => {
       setMessages(prevMessages => [...prevMessages, {nickname: data.nickname, message: data.message}]);
+      console.log(data.message)
     };
+
     socket.on('serverMessage', handleServerMessage);
     return () => {
       socket.off('serverMessage', handleServerMessage);
     };
   }, [socket]);
+//   useEffect(() => {
+//   socket.onAny((event, ...args) => {
+//     console.log("📩 Received event:", event, args);
+//   });
+// }, []);
   return (
     <>
       <div id='chat' className='bg-gray-200 h-[45vh] w-[15vw] relative'>

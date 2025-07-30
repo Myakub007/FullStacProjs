@@ -9,8 +9,8 @@ const PlayerScreen = ({ players = [] }) => {
           <div className='flex justify-evenly text-gray-500'>No players</div>
         ) : (
           players.map((player, idx) => (
-            <div key={player.socketID || idx} className='flex justify-evenly'>
-              {player.nickname} {/* Optionally add avatar/score here */}
+            <div key={player.socketID || idx} className='flex justify-between'>
+              <div>{player.nickname}</div><div>{player.score}</div>
             </div>
           ))
         )}
