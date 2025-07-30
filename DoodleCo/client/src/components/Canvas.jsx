@@ -14,16 +14,23 @@ const Canvas = ({ socket }) => {
     // const [varColor,setVarColor] = useState('#000'); not working
     const curTool = useRef('brush');
     const isPlayer = useRef(null);
-
-
+    
+    
     const maxStates = 20;
     //storing states
     const canvasStates = useRef([]);
     const [isCanvasDisabled, setIsCanvasDisabled] = useState(false);
     const [isDrawingActive, setIsDrawingActive] = useState(false);
     const [remotePaths, setRemotePaths] = useState([]);
-
-
+    const [words, setWords] = useState([]);
+    const [isSelecting, setIsSelecting] = useState(false);
+    
+    const handleSelection = (e)=>{
+        socket.emit('wordSelected',{
+            word: e.target.name
+        })
+        console.log(e.target.name)
+    }
     useEffect(() => {
         socket.on('init-canvas', (initialState) => {
             const canvas = canvasRef.current;
@@ -135,6 +142,8 @@ const Canvas = ({ socket }) => {
                 isPlayer.current = false;
             }
         }
+
+
         socket.on('turnUpdate', handleTurnUpdate)
         socket.on('currentPlayer', (data) => {
             if (data.currentPlayerSocketId === socket.id) {
@@ -142,6 +151,19 @@ const Canvas = ({ socket }) => {
                 setIsCanvasDisabled(data.isBreak);
                 setIsDrawingActive(!data.isBreak);
                 console.log("You are the current player");
+
+                socket.on('selectWord', (data) => {
+                    const options = data.words;
+                    setWords(options);
+                    setIsSelecting(true);
+                    setIsCanvasDisabled(true);
+                })
+
+                socket.on('selectRandomWord', () => {
+                    setWords([]);
+                    setIsSelecting(false);
+                    setIsCanvasDisabled(false);
+                })
             }
         });
         socket.on('canvas-cleared', clearCanvas);
@@ -152,7 +174,6 @@ const Canvas = ({ socket }) => {
             socket.off('canvas-cleared');
         }
     }, [socket])
-
 
     const saveCanvasState = () => {
         const canvas = canvasRef.current
@@ -314,12 +335,12 @@ const Canvas = ({ socket }) => {
             queue.push({ x, y: y + 1 })
             queue.push({ x, y: y - 1 })
         }
-        ctx.putImageData(imageData, 0, 0);        
+        ctx.putImageData(imageData, 0, 0);
 
         if (isPlayer.current) {
             socket.emit('fill', {
-                x: startX ,
-                y: startY ,
+                x: startX,
+                y: startY,
 
                 color: color.current,
                 socketId: socket.id
@@ -444,13 +465,25 @@ const Canvas = ({ socket }) => {
 
     return (
         <>
-            <div className='flex flex-col items-center gap-1 w-1/2 m-auto relative'>
+            <div className='flex flex-col items-center justify-center gap-1 w-1/2 m-auto relative'>
                 <canvas className='border-2 border-red-500' ref={canvasRef} style={{ opacity: isCanvasDisabled ? 0.5 : 1 }}></canvas>
-                {isCanvasDisabled && (
+                {isCanvasDisabled && !isSelecting && (
                     <div className='absolute inset-0 bg-gray-500 bg-opacity-50 flex items-center justify-center'>
                         <span className='text-white text-4xl font-bold'>BREAK</span>
                     </div>
                 )}
+                {isCanvasDisabled && isSelecting && (
+                        <div className='absolute inset-0 flex items-center justify-center'>
+                        <div className='absolute bg-black opacity-25 text-white'></div>
+                        {words.length !== 0? (
+                            <div className='flex gap-3 m-auto'>{
+                            words.map((word,i)=>{
+                                return <button type='button' key={i} onClick={(e)=>{handleSelection(e)}} name={word} className='px-2 py-1 border-2 border-white white text-white'>{word}</button>})}
+                            </div>
+                        ):(<div>Waiting...</div>)}
+                        </div>
+                    )
+                }
                 {
                     isPlayer.current && (
                         <ToolBar handleColorChage={handleColorChage} undo={undo} lineWidth={lineWidth} curTool={curTool} color={color} />

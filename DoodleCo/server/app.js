@@ -5,6 +5,7 @@ const {Server} = require('socket.io');
 const http = require('http');
 const Port = 3000;
 const crypto = require('crypto');
+const fs = require('fs');
 
 const server = http.createServer(app);
 const io = new Server(server,{
@@ -21,6 +22,21 @@ let currentCanvasState = null;
 
 const roomTimers ={};
 
+let words = [];
+if(words.length === 0){
+    words = fs.readFileSync(__dirname+'/words.txt','utf-8').split(',').map(word => word.trim());
+}
+
+const getRandomWords =(roomID)=>{
+    const shuffled = [...words];
+
+    for (let i = shuffled.length-1;i>0;i--){
+        const j = Math.floor(Math.random() * (i+1));
+        [shuffled[i],shuffled[j]] = [shuffled[j],shuffled[i]];
+    }
+    return shuffled.slice(0,rooms[roomID].words);
+}
+
 
 app.get('/', (req, res) => {
     res.send('Socket.IO Server is running');});
@@ -28,14 +44,25 @@ app.get('/', (req, res) => {
 
 app.use(cors());
 
+// const words = [];
+
+// function getRandomWords(){
+
+// }
+
 function startRoomTimer(roomID) {
     if (!rooms[roomID]) return;
     // Clear any existing timer
     if (roomTimers[roomID]) clearInterval(roomTimers[roomID]);
     
-    rooms[roomID].timer =rooms[roomID].drawingDuration || 60;
+    rooms[roomID].timer = rooms[roomID].drawingDuration || 60;
     rooms[roomID].breakTimer = 10; // Default break time
     rooms[roomID].isBreak = false; // Reset break state
+    rooms[roomID].wordTimer = 15; // Default word timer
+
+    let result = [];
+
+    // rooms[roomID].isSelectingWord = false; //reset word selection
 
     roomTimers[roomID] = setInterval(() => {
         if (!rooms[roomID]) {
@@ -48,6 +75,7 @@ function startRoomTimer(roomID) {
                 timer: rooms[roomID].breakTimer,
                 isBreak: true
             });
+            rooms[roomID].selectedWord = null;
 
             // Check if break time is over
             if(rooms[roomID].breakTimer <=0){
@@ -62,9 +90,36 @@ function startRoomTimer(roomID) {
                 })
             }
         }
+        else if(rooms[roomID].isSelectingWord){
+            rooms[roomID].wordTimer--;
+            if(result.length === 0){
+                result = getRandomWords(roomID);
+                io.to(roomID).emit('selectWord',
+                    {words:result}
+                )
+                console.log(result);
+            }
+            io.to(roomID).emit('timerUpdate',{
+                timer: rooms[roomID].wordTimer
+            })
+
+            if(rooms[roomID].selectedWord !== null){
+                rooms[roomID].wordTimer = 0;
+            }
+
+            if(rooms[roomID].wordTimer<=0){
+                rooms[roomID].isSelectingWord = false;
+                rooms[roomID].timer = rooms[roomID].drawingDuration || 60;
+                rooms[roomID].wordTimer = 15;
+                io.emit('selectRandomWord')
+                result =[];
+                console.log('someword selected');
+            }
+        }
         else{
             //Main game phase
             rooms[roomID].timer--;
+            console.log(`${rooms[roomID].isSelectingWord} and ${rooms[roomID].wordTimer}`)
             io.to(roomID).emit('timerUpdate',{
                 timer: rooms[roomID].timer,
                 isBreak: false,
@@ -73,6 +128,7 @@ function startRoomTimer(roomID) {
             // main timer ended -> start break
             if(rooms[roomID].timer <= 0 ){
                 rooms[roomID].isBreak = true;
+                rooms[roomID].isSelectingWord = true;
                 io.to(roomID).emit('turnUpdate',{
                     currentPlayer:null,
                     isBreak:true,
@@ -82,8 +138,6 @@ function startRoomTimer(roomID) {
 
     }, 1000);
 }
-
-
 
 io.on('connection',(socket) =>{
     socket.on('clear-canvas',()=>{
@@ -137,7 +191,8 @@ io.on('connection',(socket) =>{
         if(rooms[socket.roomID]){
             rooms[socket.roomID].currentTurn = 0;
             rooms[socket.roomID].isBreak = false;
-             currentCanvasState = null; // Reset canvas state when game starts
+            rooms[socket.roomID].isSelectingWord = true;
+            currentCanvasState = null; // Reset canvas state when game starts
             io.to(socket.roomID).emit('gameStarted');
             startRoomTimer(socket.roomID)
             io.to(socket.roomID).emit('init-canvas', currentCanvasState)
@@ -151,6 +206,10 @@ io.on('connection',(socket) =>{
             });
         }
 });
+
+socket.on('wordSelected',({word})=>{
+    rooms[socket.roomID].selectedWord = word;
+})
 
 socket.on('drawing-start', (startData) => {
   socket.to(socket.roomID).emit('remote-drawing', {
