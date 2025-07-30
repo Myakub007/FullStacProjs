@@ -50,7 +50,7 @@ app.use(cors());
 
 // }
 
-function startRoomTimer(roomID) {
+function startRoomTimer(id,roomID) {
     if (!rooms[roomID]) return;
     // Clear any existing timer
     if (roomTimers[roomID]) clearInterval(roomTimers[roomID]);
@@ -92,13 +92,13 @@ function startRoomTimer(roomID) {
         }
         else if(rooms[roomID].isSelectingWord){
             rooms[roomID].wordTimer--;
-            if(result.length === 0){
-                result = getRandomWords(roomID);
-                io.to(roomID).emit('selectWord',
-                    {words:result}
-                )
-                console.log(result);
-            }
+                if(result.length === 0){
+                    result = getRandomWords(roomID);
+                    io.to(roomID).emit('selectWord',
+                        {words:result}
+                    )
+                    console.log(result);
+                }
             io.to(roomID).emit('timerUpdate',{
                 timer: rooms[roomID].wordTimer
             })
@@ -194,7 +194,7 @@ io.on('connection',(socket) =>{
             rooms[socket.roomID].isSelectingWord = true;
             currentCanvasState = null; // Reset canvas state when game starts
             io.to(socket.roomID).emit('gameStarted');
-            startRoomTimer(socket.roomID)
+            startRoomTimer(socket.id,socket.roomID)
             io.to(socket.roomID).emit('init-canvas', currentCanvasState)
         }
     });
@@ -245,7 +245,7 @@ socket.on('drawing-move', (moveData) => {
             Object.assign(rooms[roomID], options);
 
             if(roomTimers[roomID]){
-                startRoomTimer(data.roomID)
+                startRoomTimer(socket.id,data.roomID)
             }
             // console.log('Updated room:', rooms[roomID]);
         } else {

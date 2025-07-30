@@ -151,21 +151,27 @@ const Canvas = ({ socket }) => {
                 setIsCanvasDisabled(data.isBreak);
                 setIsDrawingActive(!data.isBreak);
                 console.log("You are the current player");
-
-                socket.on('selectWord', (data) => {
-                    const options = data.words;
-                    setWords(options);
-                    setIsSelecting(true);
-                    setIsCanvasDisabled(true);
-                })
-
-                socket.on('selectRandomWord', () => {
-                    setWords([]);
-                    setIsSelecting(false);
-                    setIsCanvasDisabled(false);
-                })
+            }else{
+                isPlayer.current = false;
             }
         });
+        socket.on('selectWord', (data) => {
+            if(isPlayer.current){
+                const options = data.words;
+                setWords(options);
+                setIsSelecting(true);
+                setIsCanvasDisabled(true);
+            }
+        })
+
+        socket.on('selectRandomWord', () => {
+            if(isPlayer.current){
+
+                setWords([]);
+                setIsSelecting(false);
+                setIsCanvasDisabled(false);
+            }
+        })
         socket.on('canvas-cleared', clearCanvas);
 
         return () => {
