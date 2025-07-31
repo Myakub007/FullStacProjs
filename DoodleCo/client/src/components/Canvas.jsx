@@ -24,6 +24,7 @@ const Canvas = ({ socket }) => {
     const [remotePaths, setRemotePaths] = useState([]);
     const [words, setWords] = useState([]);
     const [isSelecting, setIsSelecting] = useState(false);
+    const [roundPoints, setRoundPoints] = useState([]);
     
     const handleSelection = (e)=>{
         socket.emit('wordSelected',{
@@ -49,10 +50,14 @@ const Canvas = ({ socket }) => {
                 executeRemoteFill(fillData);
             }
         })
+        socket.on('roundPoints', (data) => {
+            setRoundPoints(data.roundPoints || []);
+        });
         return () => {
             socket.off('init-canvas');
             socket.off('remote-drawing');
             socket.off('remote-fill');
+            socket.off('roundPoints');
         }
     }, [socket])
 
@@ -469,32 +474,49 @@ const Canvas = ({ socket }) => {
         }
     }, [])
 
+    // When a new turn starts, clear roundPoints
+    useEffect(() => {
+        if (!isCanvasDisabled) setRoundPoints([]);
+    }, [isCanvasDisabled]);
+
     return (
         <>
             <div className='flex flex-col items-center justify-center gap-1 w-1/2 m-auto relative'>
                 <canvas className='border-2 border-red-500' ref={canvasRef} style={{ opacity: isCanvasDisabled ? 0.5 : 1 }}></canvas>
                 {isCanvasDisabled && !isSelecting && (
                     <div className='absolute inset-0 bg-gray-500 bg-opacity-50 flex items-center justify-center'>
-                        <span className='text-white text-4xl font-bold'>BREAK</span>
+                        {roundPoints.length > 0 ? (
+                            <div className='bg-white bg-opacity-90 rounded-lg p-6 shadow-lg'>
+                                <div className='text-2xl font-bold mb-2 text-center text-black'>Points this round</div>
+                                <ul className='text-lg text-black'>
+                                    {roundPoints.map((p, i) => (
+                                        <li key={i} className='flex justify-between w-48'>
+                                            <span>{p.nickname}</span>
+                                            <span>+{p.points}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        ) : (
+                            <span className='text-white text-4xl font-bold'>BREAK</span>
+                        )}
                     </div>
                 )}
                 {isCanvasDisabled && isSelecting && (
-                        <div className='absolute inset-0 flex items-center justify-center'>
+                    <div className='absolute inset-0 flex items-center justify-center'>
                         <div className='absolute bg-black opacity-25 text-white'></div>
-                        {words.length !== 0? (
-                            <div className='flex gap-3 m-auto'>{
-                            words.map((word,i)=>{
-                                return <button type='button' key={i} onClick={(e)=>{handleSelection(e)}} name={word} className='px-2 py-1 border-2 border-white white text-white'>{word}</button>})}
+                        {words.length !== 0 ? (
+                            <div className='flex gap-3 m-auto'>
+                                {words.map((word, i) => {
+                                    return <button type='button' key={i} onClick={(e) => { handleSelection(e) }} name={word} className='px-2 py-1 border-2 border-white white text-white'>{word}</button>
+                                })}
                             </div>
-                        ):(<div>Waiting...</div>)}
-                        </div>
-                    )
-                }
-                {
-                    isPlayer.current && (
-                        <ToolBar handleColorChage={handleColorChage} undo={undo} lineWidth={lineWidth} curTool={curTool} color={color} />
-                    )
-                }
+                        ) : (<div>Waiting...</div>)}
+                    </div>
+                )}
+                {isPlayer.current && (
+                    <ToolBar handleColorChage={handleColorChage} undo={undo} lineWidth={lineWidth} curTool={curTool} color={color} />
+                )}
             </div>
         </>
     )

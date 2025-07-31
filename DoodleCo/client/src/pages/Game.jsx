@@ -59,7 +59,7 @@ const Game = () => {
   return (
     <>{gameStart ?
       <div className='bg-blue-900 h-screen flex flex-col items-center justify-center gap-3'>
-        <StatusBar socket={socketConnection} />
+        <StatusBar socket={socketConnection} onGameEnd={() => navigate('/')} />
         <div className='flex gap-4 justify-center items-center'>
           <PlayerScreen players={players} />
           <Canvas socket={socketConnection} />

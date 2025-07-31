@@ -1,10 +1,13 @@
-import React, { useEffect, useRef } from 'react'
-import { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
-const StatusBar = ({socket}) => {
+const StatusBar = ({socket, onGameEnd}) => {
   const [clock, setClock] = useState(60);
   const [currentPlayer,setCurrentPlayer] = useState(false);
   const [word,setWord] = useState(null);
+  const [currentRound, setCurrentRound] = useState(1);
+  const [rounds, setRounds] = useState(1);
+  const [showRanking, setShowRanking] = useState(false);
+  const [rankings, setRankings] = useState([]);
   useEffect(() => {
     if (!socket) return;
     const handleTimerUpdate = (data) => setClock(data.timer)
@@ -18,11 +21,33 @@ const StatusBar = ({socket}) => {
       })
       socket.on('remove',()=>{
         setWord(null);
+        setCurrentPlayer(false);
       })
+      socket.on('turnUpdate', (data) => {
+        // If the current player changed, clear the word and currentPlayer state
+        if (data.currentPlayerSocketId !== socket.id) {
+          setWord(null);
+          setCurrentPlayer(false);
+        }
+        console.log('turnUpdate received:', data);
+        if (data.currentRound) setCurrentRound(data.currentRound);
+        if (data.rounds) setRounds(data.rounds);
+      });
+      socket.on('gameEnded', (data) => {
+        setShowRanking(true);
+        setRankings(data.rankings || []);
+        setTimeout(() => {
+          setShowRanking(false);
+          if (onGameEnd) onGameEnd();
+        }, 7000);
+      });
 
       return ()=>{
         socket.off('timerUpdate',handleTimerUpdate);
         socket.off('remove')
+        socket.off('drawer');
+        socket.off('turnUpdate');
+        socket.off('gameEnded');
       }
   }, [socket]);
   return (
@@ -39,6 +64,7 @@ const StatusBar = ({socket}) => {
           <span className={`absolute top-2 ${clock<10?'left-[15px]':'left-[11px]'}  text-center`}>{clock}</span></div>
 
           <div className='flex flex-col gap-0 p-1 items-center justify-center'>
+            <div className='text-sm'>Round {currentRound} of {rounds}</div>
             <div className='text-sm'>Guess the Word</div>
             {currentPlayer&&word?(<div className='font-bold text-xl'>{word}</div>):(<div className='font-bold text-xl'>------</div>)}
           </div>
@@ -48,7 +74,23 @@ const StatusBar = ({socket}) => {
             <path d="M15.5 12C15.5 13.933 13.933 15.5 12 15.5C10.067 15.5 8.5 13.933 8.5 12C8.5 10.067 10.067 8.5 12 8.5C13.933 8.5 15.5 10.067 15.5 12Z" stroke="currentColor" strokeWidth="1.5" fill='white'></path>
           </svg></div>
         </div>
-    </>
+    {showRanking && (
+      <div className='fixed inset-0 flex items-center justify-center bg-black bg-opacity-70 z-50'>
+        <div className='bg-white rounded-lg p-8 shadow-lg w-96'>
+          <div className='text-2xl font-bold mb-4 text-center text-black'>Game Over</div>
+          <ul className='text-lg text-black mb-4'>
+            {rankings.map((p, i) => (
+              <li key={i} className={`flex justify-between w-full ${i === 0 ? 'font-bold text-yellow-600' : i === 1 ? 'font-bold text-gray-500' : i === 2 ? 'font-bold text-orange-700' : ''}`}>
+                <span>{i + 1}{i === 0 ? 'st' : i === 1 ? 'nd' : i === 2 ? 'rd' : 'th'}: {p.nickname}</span>
+                <span>{p.score}</span>
+              </li>
+            ))}
+          </ul>
+          <div className='text-center text-gray-700'>Returning to Game Options...</div>
+        </div>
+      </div>
+    )}
+  </>
   )
 }
 

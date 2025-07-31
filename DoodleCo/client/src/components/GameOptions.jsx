@@ -4,15 +4,16 @@ import '../index.css'
 const GameOptions = ({socket,role,setTimer,setWords,setRounds,roomID}) => {
   const handleChange = (e) => {
     const { name, value } = e.target;
+    const numValue = Number(value);
     if (name === 'timer') {
-      setTimer(value);
+      setTimer(numValue);
     } else if (name === 'words') {
-      setWords(value);
+      setWords(numValue);
       
     } else if (name === 'rounds') {
-      setRounds(value);
+      setRounds(numValue);
     }
-    socket.emit('updateGameOptions',{[name]:value,roomID:roomID})
+    socket.emit('updateGameOptions', { [name]: numValue, roomID });
   }
   const handleStartGame = () => {
     socket.emit('startGame');
