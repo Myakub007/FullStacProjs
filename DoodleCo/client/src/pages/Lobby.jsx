@@ -81,7 +81,7 @@ const Lobby = () => {
         <>
             <div className='bg-blue-900 h-screen'>
                 <div className='flex flex-col gap-10 justify-center items-center p-10'>
-                    <div className='text-5xl text-white'>DoodleCo</div>
+                    <div className='text-5xl text-white'>DoodleCry</div>
                     <div className='bg-blue-800 p-3'>
                         <div>
                             <input onChange={handleNickname} type="text" placeholder='Enter NickName' value={nickname} className='px-3 bg-white' />
