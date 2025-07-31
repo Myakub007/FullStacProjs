@@ -5,7 +5,7 @@ const { Server } = require('socket.io');
 const http = require('http');
 const Port = 3000;
 const crypto = require('crypto');
-// const fs = require('fs');
+const fs = require('fs');
 const path = require('path');
 
 app.use(cors({
@@ -36,7 +36,8 @@ const roomTimers = {};
 
 let words = [];
 if (words.length === 0) {
-    words = path.join(__dirname, 'words.txt').split(',').map(word => word.trim());
+    wordFilePath = path.join(__dirname,'words.txt');
+    words = fs.readFileSync(wordFilePath, 'utf-8').split(',').map(word => word.trim());
 }
 
 const getRandomWords = (roomID) => {
