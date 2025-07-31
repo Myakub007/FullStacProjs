@@ -11,7 +11,7 @@ const path = require('path');
 const server = http.createServer(app);
 const io = new Server(server, {
     cors: {
-        origin: ['http://localhost:5173', 'https://full-stac-projs.vercel.app/'],
+        origin: ['http://localhost:5173', 'https://doodlecry.onrender.com/'],
         methods: ['GET', 'POST'],
     }
 })
