@@ -8,11 +8,17 @@ const crypto = require('crypto');
 // const fs = require('fs');
 const path = require('path');
 
+
+
+
 const server = http.createServer(app);
+
+
 const io = new Server(server, {
     cors: {
         origin: ['https://full-stac-projs.vercel.app/'],
         methods: ['GET', 'POST'],
+        credentials: true
     }
 })
 const generateRoomID = () => {
@@ -44,7 +50,11 @@ app.get('/', (req, res) => {
 });
 
 
-app.use(cors());
+app.use(cors({
+  origin: ['https://full-stac-projs.vercel.app'],
+  methods: ['GET', 'POST'],
+  credentials: true
+}));
 
 // const words = [];
 
