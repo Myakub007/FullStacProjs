@@ -194,6 +194,7 @@ function startRoomTimer(roomID) {
 }
 
 io.on('connection', (socket) => {
+    console.log("connection successfull");
     socket.on('clear-canvas', () => {
         socket.to(socket.roomID).emit('canvas-cleared')
         currentCanvasState = null; // Reset canvas state when cleared
