@@ -8,6 +8,11 @@ const crypto = require('crypto');
 // const fs = require('fs');
 const path = require('path');
 
+app.use(cors({
+  origin: ['https://full-stac-projs.vercel.app'],
+  methods: ['GET', 'POST'],
+  credentials: true
+}));
 
 
 
@@ -50,11 +55,6 @@ app.get('/', (req, res) => {
 });
 
 
-app.use(cors({
-  origin: ['https://full-stac-projs.vercel.app'],
-  methods: ['GET', 'POST'],
-  credentials: true
-}));
 
 // const words = [];
 
