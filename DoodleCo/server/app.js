@@ -5,12 +5,13 @@ const { Server } = require('socket.io');
 const http = require('http');
 const Port = 3000;
 const crypto = require('crypto');
-const fs = require('fs');
+// const fs = require('fs');
+const path = require('path');
 
 const server = http.createServer(app);
 const io = new Server(server, {
     cors: {
-        origin: 'http://localhost:5173' || 'https://full-stac-projs.vercel.app/',
+        origin: ['http://localhost:5173', 'https://full-stac-projs.vercel.app/'],
         methods: ['GET', 'POST'],
     }
 })
@@ -24,7 +25,7 @@ const roomTimers = {};
 
 let words = [];
 if (words.length === 0) {
-    words = fs.readFileSync(__dirname + '/words.txt', 'utf-8').split(',').map(word => word.trim());
+    words = path.join(__dirname, 'words.txt').split(',').map(word => word.trim());
 }
 
 const getRandomWords = (roomID) => {
